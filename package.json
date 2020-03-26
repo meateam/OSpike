@@ -1,6 +1,6 @@
 {
   "name": "ospike",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "An OAuth2 authorization server supporting OpenID Connect",
   "main": "app.js",
   "scripts": {
@@ -49,7 +49,6 @@
     "nodemon": "./node_modules/.bin/nodemon"
   },
   "dependencies": {
-    "bcrypt": "^3.0.0",
     "body-parser": "^1.18.3",
     "connect-ensure-login": "^0.1.1",
     "cookie-parser": "^1.4.4",
@@ -65,8 +64,7 @@
     "oauth2orize": "^1.11.0",
     "passport": "^0.4.0",
     "passport-http": "^0.3.0",
-    "passport-http-bearer": "^1.0.1",
-    "passport-local": "^1.0.0",
+    "passport-http-bearer": "^1.0.1",    
     "passport-oauth2-client-password": "^0.1.2",
     "passport-shraga": "^1.4.0",
     "passport-strategy": "^1.0.0",
@@ -74,7 +72,6 @@
     "winston-daily-rotate-file": "^3.10.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^2.0.0",
     "@types/body-parser": "^1.17.0",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
@@ -91,8 +88,7 @@
     "@types/oauth2orize": "^1.8.3",
     "@types/passport": "^0.4.6",
     "@types/passport-http": "^0.3.6",
-    "@types/passport-http-bearer": "^1.0.33",
-    "@types/passport-local": "^1.0.33",
+    "@types/passport-http-bearer": "^1.0.33",    
     "@types/passport-oauth2-client-password": "^0.1.2",
     "@types/passport-strategy": "^0.2.35",
     "@types/supertest": "^2.0.7",

@@ -55,9 +55,6 @@ const config = {
     return `${this.OAUTH_ENDPOINT + this.OAUTH_AUTHORIZATION_ENDPOINT}`;
   },
 
-  // Bcrypt
-  BCRYPT_ROUNDS: 8,
-
   // Session
   SESSION_SECRET: 'bla_bla_secret_session_dont_tell_anyone',
 

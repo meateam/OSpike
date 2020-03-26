@@ -1,3 +1,10 @@
+## [1.1.1] (2020-03-26)
+
+
+### Bug Fixes
+
+* Remove unused imports and utilities ([210de48](https://github.com/shakedmanes/authorization-server/commit/210de48fcc02688b6661481cfe4fcce37a49a06a))
+
 # v1.1.0 (2020-03-24)
 
 
