@@ -26,6 +26,14 @@ const config = {
   CLIENT_MANAGER_PASSPORT_STRATEGY: 'client_manager_strategy', // Only client manager authentication
   CLIENT_MANAGER_PASSPORT_MANAGEMENT_STRATEGY: 'client_manager_management_strategy',
 
+  // OAuth2 Grant Types
+  OAUTH_GRANT_TYPES: {
+    AUTHORIZATION_CODE: 'code',
+    IMPLICIT: 'token',
+    RESOURCE_OWNER_PASSWORD_CREDENTIALS: 'password',
+    CLIENT_CREDENTIALS: 'client_credentials',
+  },
+
   /** Routes Configuration */
   OAUTH_ENDPOINT: '/oauth2',
 

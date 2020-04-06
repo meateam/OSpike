@@ -6,22 +6,8 @@ import { collectionName as ScopeModelName } from '../scope/scope.interface';
 import { IAccessToken, collectionName } from './accessToken.interface';
 import { clientRefValidator } from '../client/client.validator';
 import config from '../config';
-import { AccessTokenLimitExceeded } from './accessToken.error';
+import { AccessTokenLimitExceeded, errorMessages } from './accessToken.error';
 import { scopeRefValidator } from '../scope/scope.validator';
-
-// TODO: Define scope model and scope types
-// TODO: Define specific grant types available for token
-
-export const errorMessages = {
-  DUPLICATE_ACCESS_TOKEN: `There's already token for the client and the user and the audience.`,
-  DUPLICATE_ACCESS_TOKEN_WITHOUT_USER: `There's already token for the client and the audience.`,
-  LIMIT_VIOLATION_ACCESS_TOKEN:
-    `Access Token LIMIT Exceeded - There's already ${config.ACCESS_TOKEN_COUNT_LIMIT}${''
-    } tokens for the client and the user and the audience.`,
-  LIMIT_VIOLATION_ACCESS_TOKEN_WITHOUT_USER:
-    `Access Token LIMIT Exceeded - There's already ${config.ACCESS_TOKEN_COUNT_LIMIT}${''
-    } tokens for the client and the audience.`,
-};
 
 const accessTokenSchema = new Schema(
   {
@@ -40,7 +26,6 @@ const accessTokenSchema = new Schema(
     },
     value: {
       type: String,
-      // unique: true,
       required: true,
     },
     scopes: {
@@ -49,6 +34,7 @@ const accessTokenSchema = new Schema(
     },
     grantType: {
       type: String,
+      enum: (<any>Object).values(config.OAUTH_GRANT_TYPES),
       required: true,
     },
     expireAt: { // Expiration time of token, the token will be deleted from db by the expires value.
@@ -104,7 +90,6 @@ accessTokenSchema.pre<IAccessToken>(
         }
       }
 
-      // TODO: Construct better error handling for errors like that
       if (currentActiveTokensCount >= config.ACCESS_TOKEN_COUNT_LIMIT) {
 
         // Creating this error as MongoError for easy control via mongoose error handler
@@ -117,16 +102,6 @@ accessTokenSchema.pre<IAccessToken>(
     }
   },
 );
-
-// TODO: Construct better error handling for errors from mongo server
-// accessTokenSchema.post('save', function save(this: IAccessToken, err: any, doc: any, next: any) {
-//   if (err.name === 'MongoError' && err.code === 11000) {
-//     err.message = this.userId ? errorMessages.DUPLICATE_ACCESS_TOKEN :
-//                                 errorMessages.DUPLICATE_ACCESS_TOKEN_WITHOUT_USER;
-//   }
-
-//   next(err);
-// });
 
 // Virtual field for audience client validations and population
 accessTokenSchema.virtual('audienceClient', {

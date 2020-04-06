@@ -18,18 +18,10 @@ import { IClient } from '../client/client.interface';
 import { IScope } from '../scope/scope.interface';
 import config from '../config';
 import { BadRequest } from '../utils/error';
-import { InsufficientScopes } from './oauth2.error';
+import { InsufficientScopes, errorMessages } from './oauth2.error';
 import { LOG_LEVEL, log, parseLogData } from '../utils/logger';
 import { ScopeUtils } from '../scope/scope.utils';
 import { Wrapper } from '../utils/wrapper';
-
-// Error messages
-export const errorMessages = {
-  MISSING_AUDIENCE: 'The audience parameter is missing.',
-  MISSING_SCOPE_IN_CLIENT: `Client doesn't support client_credentials due incomplete scopes value.`,
-  MISSING_SCOPE: 'The scope parameter is missing.',
-  INSUFFICIENT_SCOPE_FOR_CLIENT: `The client doesn't have permission for the requested scopes.`,
-};
 
 // TODO: create specified config files with grants types
 // TODO: create generated session key for each of the requests
@@ -37,15 +29,6 @@ const server = oauth2orize.createServer();
 
 // Binds the route for login in ensure logged in middleware
 const loginUri = '/oauth2/login';
-// const ensureLoggedInMiddleware =
-// (req: Request, res: Response, next: NextFunction) => {
-//   if (!req.user) {
-//     const relayState = Buffer.from(req.url).toString('base64');
-//     res.redirect(`/auth/shraga/?RelayState=${relayState}`);
-//   } else {
-//     next();
-//   }
-// };
 
 /**
  * ############ FOR FUTURE VERSIONS ############
@@ -127,7 +110,7 @@ server.grant(oauth2orize.grant.token(async (client, user, ares, done) => {
       userId: user.id,
       audience: ares.audience,
       scopes: ares.scope.map((scope: IScope) => scope._id),
-      grantType: 'token',
+      grantType: config.OAUTH_GRANT_TYPES.IMPLICIT,
     }).save();
 
     log(
@@ -183,7 +166,7 @@ server.exchange(oauth2orize.exchange.code(
           userId: authCode.userId,
           audience: authCode.audience,
           scopes: authCode.scopes,
-          grantType: 'code',
+          grantType: config.OAUTH_GRANT_TYPES.AUTHORIZATION_CODE,
         }).save();
 
         // Generate refresh token based on access token
@@ -274,7 +257,7 @@ server.exchange(oauth2orize.exchange.code(
 //           userId: user.id,
 //           audience: body.audience,
 //           scopes: await ScopeUtils.transformRawScopesToModels(scope, body.audience),
-//           grantType: 'password',
+//           grantType: config.OAUTH_GRANT_TYPES.RESOURCE_OWNER_PASSWORD_CREDENTIALS,
 //         }).save();
 
 //         const refreshToken = await new refreshTokenModel({
@@ -364,7 +347,7 @@ server.exchange(oauth2orize.exchange.clientCredentials(
         }),
         clientId: client._id,
         audience: body.audience,
-        grantType: 'client_credentials',
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         // scopes: client.scopes, // Change this to body.scope
         scopes: permittedScopesForClient,
       }).save();
@@ -528,7 +511,8 @@ export const authorizationEndpoint = [
          * found in scopeUtils file
          */
 
-        // Checking if the client has access to the scopes he requested
+        // Passing to next middleware for checking if the client
+        // has access to the scopes he requested
 
         return done(null, client, areq.redirectURI);
       }
@@ -551,7 +535,7 @@ export const authorizationEndpoint = [
       // TODO: Consider if the client requests for other scope, ask the user if he wants
       //       To drop the access token that the client have and create a new one with
       //       The requested scopes.
-      // if (accessToken && isScopeEquals(accessToken.scopes, oauth2.scope)) {
+      // if (accessToken && ScopeUtils.isScopeEquals(accessToken.scopes, oauth2.scope)) {
       //   return (
       //     done(null, true, { audience: oauth2.locals.audience, scope: oauth2.req.scope }, null)
       //   );

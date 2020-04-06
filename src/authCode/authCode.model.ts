@@ -6,9 +6,9 @@ import {
   collectionName as ClientModelName,
 } from '../client/client.interface';
 import { IAuthCode, collectionName } from './authCode.interface';
+import { BadRedirectUri } from './authCode.error';
 import { collectionName as ScopeModelName } from '../scope/scope.interface';
 import { scopeRefValidator } from '../scope/scope.validator';
-
 import config from '../config';
 
 const authCodeSchema = new Schema({
@@ -49,9 +49,6 @@ const authCodeSchema = new Schema({
   },
 });
 
-// Ensures there's only one code for client, user and audience combination
-authCodeSchema.index({ clientId: 1, userId: 1, audience: 1 }, { unique: true });
-
 // Construct better error handling for errors from mongo server
 authCodeSchema.post('save', (err, doc, next) => {
   if (err.name === 'MongoError' && err.code === 11000) {
@@ -61,12 +58,11 @@ authCodeSchema.post('save', (err, doc, next) => {
   next(err);
 });
 
-// TODO: Implement proper exception handling for this throwed error
 // Checking if redirectUri specified is in the redirect uris of the client model
 authCodeSchema.pre<IAuthCode>('validate', async function () {
   const clientModel = await model<IClient>(ClientModelName).findOne({ id: this.clientId });
   if (clientModel && clientModel.isValidRedirectUri(this.redirectUri)) {
-    throw new Error('Reference Error - RedirectUri doesn\'t exists in client model');
+    throw new BadRedirectUri();
   }
 });
 

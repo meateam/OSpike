@@ -58,6 +58,7 @@ clientSchema.methods.toJSON = function () {
   return obj;
 };
 
+// Checks if the redirect uri given belongs to the client
 clientSchema.methods.isValidRedirectUri = function (this: IClient, redirectUri: string) {
 
   let urlFormatedRedirectUri = null;

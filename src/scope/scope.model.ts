@@ -36,9 +36,6 @@ const scopeSchema = new Schema(
 // Ensures there's only one unique scope value for unique client (by audienceId field)
 scopeSchema.index({ value: 1, audienceId: 1 }, { unique: true });
 
-// TODO: Create an pre/post hook when adding client to permitted clients array, so the client
-//       'scopes' array will also contain that scope due the addition permission for that scope
-
 // Virtual field for audience client validations and population
 scopeSchema.virtual('audienceClient', {
   ref: ClientModelName,

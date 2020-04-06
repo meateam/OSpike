@@ -6,9 +6,8 @@ import app from '../app';
 import config from '../config';
 import { dismantleNestedProperties } from '../utils/objectUtils';
 import { deleteCollections } from '../test';
-import accessTokenModel, {
-  errorMessages as tokenErrorMessages,
-} from '../accessToken/accessToken.model';
+import accessTokenModel from '../accessToken/accessToken.model';
+import { errorMessages as tokenErrorMessages } from '../accessToken/accessToken.error';
 import clientModel from '../client/client.model';
 import refreshTokenModel from '../refreshToken/refreshToken.model';
 import { IClient } from '../client/client.interface';
@@ -16,7 +15,7 @@ import { OAuth2Utils, JWTPayload } from './oauth2.utils';
 import { refreshTokenValueGenerator } from '../utils/valueGenerator';
 import { IAccessToken } from '../accessToken/accessToken.interface';
 // import userModel from '../user/user.model';
-import { errorMessages } from './oauth2.controller';
+import { errorMessages } from './oauth2.error';
 import { IRefreshToken } from '../refreshToken/refreshToken.interface';
 
 // Utility functions for the tests
