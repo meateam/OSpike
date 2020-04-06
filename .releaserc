@@ -1,5 +1,5 @@
 {
-  "branches": ["master"],
+  "branches": ["master", "next"],
   "repositoryUrl": "https://github.com/rabiran/OSpike",
   "dryRun": true,
   "ci": false,
