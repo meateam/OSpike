@@ -4,7 +4,14 @@
   "dryRun": true,
   "ci": false,
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    ["@semantic-release/commit-analyzer",{
+      "releaseRules": [
+        {type: 'feat', release: 'minor'},
+        {type: 'fix', release: 'minor'},
+        {type: 'perf', release: 'patch'},
+        {type: 'refactor', release: 'patch'},        
+      ]
+    }],
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", {
       "changelogFile": "./CHANGELOG.md",
