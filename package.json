@@ -1,6 +1,6 @@
 {
   "name": "ospike",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "An OAuth2 authorization server supporting OpenID Connect",
   "main": "app.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "bc": "node ./scripts/before_commit.js",
     "ac": "node ./scripts/after_commit.js",
     "test": "npm run build-test && mocha dist/test.js dist/**/*.spec.js -t 15000 -r dotenv/config --exit",
-    "semantic-release": "semantic-release --no-ci"
+    "semantic-release": "semantic-release"
   },
   "repository": {
     "type": "git",

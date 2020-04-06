@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/rabiran/OSpike/compare/v1.1.1...v1.2.0) (2020-04-06)
+
+
+### Bug Fixes
+
+* Fixing release commit analyzer rules ([27aa742](https://github.com/rabiran/OSpike/commit/27aa742b8de5e53f5bb5df6a5f169ddc8fb1d1a1))
+
 ## [1.1.1] (2020-03-26)
 
 
@@ -89,5 +96,3 @@
 * Changing the redirectUris field to accept only suffix redirectUri instead of full redirectUri ([b9514ca](https://github.com/shakedmanes/authorization-server/commit/b9514ca5d2d0e43bfdb05df7bb523a73a5e46f20))
 * Implement client manager authentication for client registration and management. Closes [#10](https://github.com/shakedmanes/authorization-server/issues/10). Fix whole client registration and management controller logic. Closes [#2](https://github.com/shakedmanes/authorization-server/issues/2) ([567df01](https://github.com/shakedmanes/authorization-server/commit/567df01ed70257822e2e15501d1776377f24cd1e))
 * Implement client registration logic and routes without client manager authentication, Also implement passport strategy for client manager and registration token authentication, as Issued at [#2](https://github.com/shakedmanes/authorization-server/issues/2) ([5e13611](https://github.com/shakedmanes/authorization-server/commit/5e13611312ab00f849f630cea11bd227d2cd5ebd))
-
-
