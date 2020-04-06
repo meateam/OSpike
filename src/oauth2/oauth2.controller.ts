@@ -670,7 +670,6 @@ export const tokenIntrospectionEndpoint = [
       try {
         jwtPayload = OAuth2Utils.stripJWTAccessToken(token);
       } catch (err) {
-
         log(
           LOG_LEVEL.INFO,
           parseLogData(

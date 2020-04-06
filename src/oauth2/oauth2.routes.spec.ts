@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { default as request } from 'supertest';
 import app from '../app';
 import config from '../config';
-import { dismantleNestedProperties } from '../utils/objectUtils';
+import { dismantleNestedProperties, objWithoutKeys } from '../utils/objectUtils';
 import { deleteCollections } from '../test';
 import accessTokenModel from '../accessToken/accessToken.model';
 import { errorMessages as tokenErrorMessages } from '../accessToken/accessToken.error';
@@ -14,6 +14,8 @@ import { IClient } from '../client/client.interface';
 import { OAuth2Utils, JWTPayload } from './oauth2.utils';
 import { refreshTokenValueGenerator } from '../utils/valueGenerator';
 import { IAccessToken } from '../accessToken/accessToken.interface';
+import scopeModel from '../scope/scope.model';
+import { IScope } from '../scope/scope.interface';
 // import userModel from '../user/user.model';
 import { errorMessages } from './oauth2.error';
 import { IRefreshToken } from '../refreshToken/refreshToken.interface';
@@ -110,7 +112,7 @@ function checkTokenResponseValidity(grantType: GrantType,
       expect(accessToken).to.nested.include({
         iss: config.issuerHostUri,
         clientId: client.id,
-        sub: client._id.toString(),
+        sub: client.id.toString(),
         iat: accessToken.exp - config.ACCESS_TOKEN_EXPIRATION_TIME,
         exp: accessToken.iat + config.ACCESS_TOKEN_EXPIRATION_TIME,
         ...dismantleNestedProperties(null, tokenOptions),
@@ -162,7 +164,17 @@ function checkTokenResponseValidity(grantType: GrantType,
  */
 function checkTokenIntrospection(response: request.Response, token?: IAccessToken) {
 
-  const payload = token ? OAuth2Utils.stripJWTAccessToken(token.value) as object : {};
+  let payload = token ? OAuth2Utils.stripJWTAccessToken(token.value) as object : {};
+  if ((<any>payload).scope) {
+    (<any>payload).scope.forEach(
+      (scope: any, index: number) => {
+        (<any>payload)[`scope[${index}].value`] = scope;
+        (<any>payload)[`scope[${index}].description`] = 'No description provided';
+      },
+    );
+
+    payload = objWithoutKeys(payload, ['scope']);
+  }
 
   expect(response).to.nested.include({
     status: 200,
@@ -202,7 +214,6 @@ describe('OAuth2 Flows Functionality', () => {
     name: 'registeredClient',
     hostUris: ['https://registeredClient.register.com'],
     redirectUris: ['/callback'],
-    scopes: ['something'],
   });
 
   let registeredClient2 = new clientModel({
@@ -213,7 +224,6 @@ describe('OAuth2 Flows Functionality', () => {
     name: 'registeredClient2',
     hostUris: ['https://registeredClient2.register.com'],
     redirectUris: ['/callback2'],
-    scopes: ['something2'],
   });
 
   let registeredClient3 = new clientModel({
@@ -224,22 +234,17 @@ describe('OAuth2 Flows Functionality', () => {
     name: 'registeredClient3',
     hostUris: ['https://registeredClient3.register.com'],
     redirectUris: ['/callback3'],
-    scopes: ['something3'],
   });
 
-  // const registeredUserPassword = '123456';
-  // let registeredUser = new userModel({
-  //   name: 'Someone',
-  //   email: 'someone@someone.com',
-  //   password: registeredUserPassword,
-  // });
-
-  // const registeredUserPassword2 = 'johnny';
-  // let registeredUser2 = new userModel({
-  //   name: 'Johndoe',
-  //   email: 'johndoe@smith.com',
-  //   password: registeredUserPassword2,
-  // });
+  /**
+   * Each scope belongs to client X [1/2/3] and contains the next client
+   * as the scope permitted client [1->2] [2->3] [3->1]
+   * client 1 has access also to scope of client 2
+   */
+  let scopeOfClient1: IScope | null = null;
+  let scopeOfClient2: IScope | null = null;
+  let scopeOfClient3: IScope | null = null;
+  let anotherScopeOfClient1: IScope | null = null;
 
   before(async () => {
     await deleteCollections();
@@ -247,8 +252,27 @@ describe('OAuth2 Flows Functionality', () => {
     registeredClient = await registeredClient.save();
     registeredClient2 = await registeredClient2.save();
     registeredClient3 = await registeredClient3.save();
-    // registeredUser = await registeredUser.save();
-    // registeredUser2 = await registeredUser2.save();
+
+    scopeOfClient1 = await new scopeModel({
+      value: 'test',
+      audienceId: registeredClient.audienceId,
+      permittedClients: [registeredClient2._id],
+    }).save();
+    scopeOfClient2 = await new scopeModel({
+      value: 'test2',
+      audienceId: registeredClient2.audienceId,
+      permittedClients: [registeredClient3._id, registeredClient._id],
+    }).save();
+    scopeOfClient3 = await new scopeModel({
+      value: 'test3',
+      audienceId: registeredClient3.audienceId,
+      permittedClients: [registeredClient._id],
+    }).save();
+    anotherScopeOfClient1 = await new scopeModel({
+      value: 'testtest',
+      audienceId: registeredClient.audienceId,
+      permittedClients: [registeredClient2._id],
+    }).save();
   });
 
   after(async () => {
@@ -547,13 +571,21 @@ describe('OAuth2 Flows Functionality', () => {
           .set(
             'Authorization',
             createAuthorizationHeader(registeredClient.id, registeredClient.secret),
-          ).send(createTokenParameters('client_credentials', 'https://audience', 'something'))
-          .expect((res) => {
+          ).send(
+            createTokenParameters(
+              config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+              registeredClient3.audienceId as string,
+              (scopeOfClient3 as IScope).value,
+            ),
+          ).expect((res) => {
             checkTokenResponseValidity(
               GrantType.CLIENT_CREDENTIALS,
               res,
               registeredClient,
-              { aud: 'https://audience', scope: ['something'] },
+              {
+                aud: registeredClient3.audienceId as string,
+                scope: [(scopeOfClient3 as IScope).value],
+              },
             );
           }).end(done);
        },
@@ -565,7 +597,11 @@ describe('OAuth2 Flows Functionality', () => {
          request(app)
           .post(TOKEN_ENDPOINT)
           .send({
-            ...createTokenParameters('client_credentials', 'https://audience', 'something'),
+            ...createTokenParameters(
+              config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+              registeredClient3.audienceId as string,
+              (scopeOfClient3 as IScope).value,
+            ),
             client_id: registeredClient.id,
             client_secret: registeredClient.secret,
           }).expect((res) => {
@@ -573,7 +609,10 @@ describe('OAuth2 Flows Functionality', () => {
               GrantType.CLIENT_CREDENTIALS,
               res,
               registeredClient,
-              { aud: 'https://audience', scope: ['something'] },
+              {
+                aud: registeredClient3.audienceId as string,
+                scope: [(scopeOfClient3 as IScope).value],
+              },
             );
           }).end(done);
        },
@@ -584,10 +623,10 @@ describe('OAuth2 Flows Functionality', () => {
        async () => {
          const previousAccessToken = await new accessTokenModel({
            clientId: registeredClient._id,
-           audience: 'https://someaudience.com',
+           audience: registeredClient3.audienceId as string,
            value: 'abcd1234',
-           scopes: ['something'],
-           grantType: 'client_credentials',
+           scopes: [(scopeOfClient3 as IScope)._id],
+           grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
          }).save();
 
          const response =
@@ -597,14 +636,21 @@ describe('OAuth2 Flows Functionality', () => {
                     'Authorization',
                     createAuthorizationHeader(registeredClient.id, registeredClient.secret),
                   ).send(
-                    createTokenParameters('client_credentials', 'https://audience', 'something'),
+                    createTokenParameters(
+                      config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+                      registeredClient2.audienceId as string,
+                      (scopeOfClient2 as IScope).value,
+                    ),
                   );
 
          checkTokenResponseValidity(
            GrantType.CLIENT_CREDENTIALS,
            response,
            registeredClient,
-           { aud: 'https://audience', scope: ['something'] },
+           {
+             aud: registeredClient2.audienceId as string,
+             scope: [(scopeOfClient2 as IScope).value],
+           },
          );
        },
     );
@@ -621,17 +667,21 @@ describe('OAuth2 Flows Functionality', () => {
                       'Authorization',
                       createAuthorizationHeader(registeredClient.id, registeredClient.secret),
                     ).send(
-                      createTokenParameters('client_credentials', 'https://audience2', 'something'),
+                      createTokenParameters(
+                        config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+                        registeredClient3.audienceId as string,
+                        (scopeOfClient3 as IScope).value),
                     );
-           // console.log(response.body);
-           console.log(index);
 
            // Checking each token validity
            checkTokenResponseValidity(
              GrantType.CLIENT_CREDENTIALS,
              response,
              registeredClient,
-             { aud: 'https://audience2', scope: ['something'] },
+             {
+               aud: registeredClient3.audienceId as string,
+               scope: [(scopeOfClient3 as IScope).value],
+             },
            );
          }
 
@@ -649,10 +699,10 @@ describe('OAuth2 Flows Functionality', () => {
            tokens.push(
              await new accessTokenModel({
                clientId: registeredClient._id,
-               audience: 'SomeAudienceId',
+               audience: registeredClient3.audienceId,
                value: index,
-               scopes: ['some'],
-               grantType: 'client_credentials',
+               scopes: [(scopeOfClient3 as IScope)._id],
+               grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
              }).save(),
           );
          }
@@ -666,9 +716,9 @@ describe('OAuth2 Flows Functionality', () => {
                      createAuthorizationHeader(registeredClient.id, registeredClient.secret),
                    ).send(
                      createTokenParameters(
-                       'client_credentials',
-                       'DifferentAudienceId',
-                       'something',
+                       config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+                       registeredClient2.audienceId as string,
+                       (scopeOfClient2 as IScope).value,
                      ),
                    );
 
@@ -676,7 +726,10 @@ describe('OAuth2 Flows Functionality', () => {
            GrantType.CLIENT_CREDENTIALS,
            response,
            registeredClient,
-           { aud: 'DifferentAudienceId', scope: ['something'] },
+           {
+             aud: registeredClient2.audienceId as string,
+             scope: [(scopeOfClient2 as IScope).value],
+           },
          );
        },
     );
@@ -691,10 +744,10 @@ describe('OAuth2 Flows Functionality', () => {
            tokens.push(
             await new accessTokenModel({
               clientId: registeredClient._id,
-              audience: 'SomeAudienceId',
+              audience: registeredClient3.audienceId,
               value: index,
-              scopes: ['some'],
-              grantType: 'client_credentials',
+              scopes: [(scopeOfClient3 as IScope)._id],
+              grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
             }).save(),
            );
          }
@@ -703,10 +756,10 @@ describe('OAuth2 Flows Functionality', () => {
          tokens.push(
           await new accessTokenModel({
             clientId: registeredClient._id,
-            audience: 'SomeAudienceId',
+            audience: registeredClient3.audienceId,
             value: 'Expired',
-            scopes: ['some'],
-            grantType: 'client_credentials',
+            scopes: [(scopeOfClient3 as IScope)._id],
+            grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
             expireAt: Date.now() - config.ACCESS_TOKEN_EXPIRATION_TIME * 1000 - 10000,
           }).save(),
          );
@@ -718,14 +771,21 @@ describe('OAuth2 Flows Functionality', () => {
                      'Authorization',
                      createAuthorizationHeader(registeredClient.id, registeredClient.secret),
                    ).send(
-                     createTokenParameters('client_credentials', 'SomeAudienceId', 'something'),
+                     createTokenParameters(
+                       config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+                       registeredClient3.audienceId as string,
+                       (scopeOfClient3 as IScope).value,
+                     ),
                    );
 
          checkTokenResponseValidity(
            GrantType.CLIENT_CREDENTIALS,
            response,
            registeredClient,
-           { aud: 'SomeAudienceId', scope: ['something'] },
+           {
+             aud: registeredClient3.audienceId as string,
+             scope: [(scopeOfClient3 as IScope).value],
+           },
          );
        },
     );
@@ -740,10 +800,10 @@ describe('OAuth2 Flows Functionality', () => {
            tokens.push(
              await new accessTokenModel({
                clientId: registeredClient._id,
-               audience: 'SomeAudienceId',
+               audience: registeredClient3.audienceId,
                value: index,
-               scopes: ['some'],
-               grantType: 'client_credentials',
+               scopes: [(scopeOfClient3 as IScope)._id],
+               grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
              }).save(),
            );
          }
@@ -756,7 +816,11 @@ describe('OAuth2 Flows Functionality', () => {
                      'Authorization',
                      createAuthorizationHeader(registeredClient.id, registeredClient.secret),
                    ).send(
-                     createTokenParameters('client_credentials', 'SomeAudienceId', 'some'),
+                     createTokenParameters(
+                       config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+                       registeredClient3.audienceId as string,
+                       (scopeOfClient3 as IScope).value,
+                      ),
                    );
 
          expect(response).to.nested.include({
@@ -770,8 +834,13 @@ describe('OAuth2 Flows Functionality', () => {
        (done) => {
          request(app)
          .post(TOKEN_ENDPOINT)
-         .send(createTokenParameters('client_credentials', 'https://audience', 'something'))
-         .expect(401)
+         .send(
+           createTokenParameters(
+            config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+            registeredClient3.audienceId as string,
+            (scopeOfClient3 as IScope).value,
+          ),
+         ).expect(401)
          .end(done);
        },
     );
@@ -783,8 +852,13 @@ describe('OAuth2 Flows Functionality', () => {
           .set(
             'Authorization',
             createAuthorizationHeader(registeredClient.id, registeredClient.secret),
-          ).send(createTokenParameters('client_credentials', undefined, 'something'))
-          .expect(400, { message: errorMessages.MISSING_AUDIENCE })
+          ).send(
+            createTokenParameters(
+              config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+              undefined,
+              (scopeOfClient3 as IScope).value,
+            ),
+          ).expect(400, { message: errorMessages.MISSING_AUDIENCE })
           .end(done);
        },
     );
@@ -796,8 +870,13 @@ describe('OAuth2 Flows Functionality', () => {
           .set(
             'Authorization',
             createAuthorizationHeader(registeredClient.id, registeredClient.secret),
-          ).send(createTokenParameters(undefined, 'https://audience', 'something'))
-          .expect(501)
+          ).send(
+            createTokenParameters(
+              undefined,
+              registeredClient3.audienceId as string,
+              (scopeOfClient3 as IScope).value,
+            ),
+          ).expect(501)
           .end(done);
        },
     );
@@ -840,8 +919,13 @@ describe('OAuth2 Flows Functionality', () => {
          request(app)
           .post(TOKEN_ENDPOINT)
           .set('Authorization', createAuthorizationHeader(registeredClient.id, 'incorrectSecret'))
-          .send(createTokenParameters('client_credentials', 'https://audience', 'something'))
-          .expect(401)
+          .send(
+            createTokenParameters(
+              config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+              registeredClient3.audienceId as string,
+              (scopeOfClient3 as IScope).value,
+            ),
+          ).expect(401)
           .end(done);
        },
     );
@@ -850,8 +934,13 @@ describe('OAuth2 Flows Functionality', () => {
       request(app)
         .post(TOKEN_ENDPOINT)
         .set('Authorization', createAuthorizationHeader('unexistingId', 'unexisitingSecret'))
-        .send(createTokenParameters('client_credentials', 'https://audience', 'something'))
-        .expect(401)
+        .send(
+          createTokenParameters(
+            config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+            registeredClient3.audienceId as string,
+            (scopeOfClient3 as IScope).value,
+          ),
+        ).expect(401)
         .end(done);
     });
 
@@ -1438,18 +1527,7 @@ describe('OAuth2 Flows Functionality', () => {
 
   describe('Token Introspection', () => {
 
-    let validToken = new accessTokenModel({
-      clientId: registeredClient._id,
-      audience: registeredClient2.audienceId,
-      value: OAuth2Utils.createJWTAccessToken({
-        aud: registeredClient2.audienceId as string,
-        sub: registeredClient._id,
-        scope: ['read'],
-        clientId: registeredClient._id,
-      }),
-      scopes: ['read'],
-      grantType: 'client_credentials',
-    });
+    let validToken: IAccessToken | null = null;
 
     // let validToken2 = new accessTokenModel({
     //   clientId: registeredClient._id,
@@ -1465,47 +1543,62 @@ describe('OAuth2 Flows Functionality', () => {
     //   grantType: 'code',
     // });
 
-    let validInactiveToken = new accessTokenModel({
-      clientId: registeredClient2._id,
-      audience: registeredClient.audienceId,
-      value: OAuth2Utils.createJWTAccessToken({
-        aud: registeredClient.audienceId as string,
-        sub: registeredClient2._id,
-        scope: ['write'],
-        clientId: registeredClient2._id,
-      }),
-      scopes: ['write'],
-      grantType: 'client_credentials',
-    });
+    let validInactiveToken: IAccessToken | null = null ;
 
     before(async () => {
       await deleteCollections(['accesstokens']);
-      validToken = await validToken.save();
-      // validToken2 = await validToken2.save();
-      validInactiveToken = await validInactiveToken.save();
-      await validInactiveToken.update({ expireAt: 100 });
+
+      validToken = await new accessTokenModel({
+        clientId: registeredClient2._id,
+        audience: registeredClient.audienceId,
+        value: OAuth2Utils.createJWTAccessToken({
+          aud: registeredClient.audienceId as string,
+          sub: registeredClient2.id,
+          scope: [(scopeOfClient1 as IScope).value],
+          clientId: registeredClient2._id,
+        }),
+        scopes: [(scopeOfClient1 as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+      }).save();
+      validInactiveToken = await new accessTokenModel({
+        clientId: registeredClient3._id,
+        audience: registeredClient2.audienceId,
+        value: OAuth2Utils.createJWTAccessToken({
+          aud: registeredClient2.audienceId as string,
+          sub: registeredClient3.id,
+          scope: [(scopeOfClient2 as IScope).value],
+          clientId: registeredClient3._id,
+        }),
+        scopes: [(scopeOfClient2 as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
+        expireAt: new Date(1000),
+      }).save();
+
     });
 
-    it('Should return information about valid token via HTTP Basic Authentication', (done) => {
-      request(app)
-        .post(TOKEN_INTROSPECTION_ENDPOINT)
-        .set(
-          'Authorization',
-          createAuthorizationHeader(registeredClient.id, registeredClient.secret),
-        ).send({ token: validToken.value })
-        .expect(res => checkTokenIntrospection(res, validToken))
-        .end(done);
+    it('Should return information about valid token via HTTP Basic Authentication', async () => {
+      const response =
+        await request(app)
+                .post(TOKEN_INTROSPECTION_ENDPOINT)
+                .set(
+                  'Authorization',
+                  createAuthorizationHeader(registeredClient2.id, registeredClient2.secret),
+                ).send({ token: (validToken as IAccessToken).value });
+
+      checkTokenIntrospection(response, (validToken as IAccessToken));
     });
 
-    it('Should return information about valid token via POST Authentication', (done) => {
-      request(app)
-        .post(TOKEN_INTROSPECTION_ENDPOINT)
-        .send({
-          token: validToken.value,
-          client_id: registeredClient.id,
-          client_secret: registeredClient.secret,
-        }).expect(res => checkTokenIntrospection(res, validToken))
-        .end(done);
+    it('Should return information about valid token via POST Authentication', async () => {
+      const response =
+        await request(app)
+                .post(TOKEN_INTROSPECTION_ENDPOINT)
+                .send({
+                  token: (validToken as IAccessToken).value,
+                  client_id: registeredClient.id,
+                  client_secret: registeredClient.secret,
+                });
+
+      checkTokenIntrospection(response, (validToken as IAccessToken));
     });
 
     // it('Should return information about valid token containing associated username', (done) => {
@@ -1519,59 +1612,63 @@ describe('OAuth2 Flows Functionality', () => {
     //     .end(done);
     // });
 
-    it('Should return information about valid token to audience client', (done) => {
-      request(app)
-        .post(TOKEN_INTROSPECTION_ENDPOINT)
-        .set(
-          'Authorization',
-          createAuthorizationHeader(registeredClient2.id, registeredClient2.secret),
-        ).send({ token: validToken.value })
-        .expect(res => checkTokenIntrospection(res, validToken))
-        .end(done);
+    it('Should return information about valid token to audience client', async () => {
+      const response =
+        await request(app)
+                .post(TOKEN_INTROSPECTION_ENDPOINT)
+                .set(
+                  'Authorization',
+                  createAuthorizationHeader(registeredClient2.id, registeredClient2.secret),
+                ).send({ token: (validToken as IAccessToken).value });
+
+      checkTokenIntrospection(response, (validToken as IAccessToken));
     });
 
-    it('Should return information about valid token to the associated client', (done) => {
-      request(app)
-      .post(TOKEN_INTROSPECTION_ENDPOINT)
-      .set(
-        'Authorization',
-        createAuthorizationHeader(registeredClient.id, registeredClient.secret),
-      ).send({ token: validToken.value })
-      .expect(res => checkTokenIntrospection(res, validToken))
-      .end(done);
+    it('Should return information about valid token to the associated client', async () => {
+      const response =
+        await request(app)
+                .post(TOKEN_INTROSPECTION_ENDPOINT)
+                .set(
+                  'Authorization',
+                  createAuthorizationHeader(registeredClient.id, registeredClient.secret),
+                ).send({ token: (validToken as IAccessToken).value });
+
+      checkTokenIntrospection(response, (validToken as IAccessToken));
     });
 
     it(`Should not return information about valid token to ${''
        }client which is not associated or audience`,
-       (done) => {
-         request(app)
-          .post(TOKEN_INTROSPECTION_ENDPOINT)
-          .set(
-            'Authorization',
-            createAuthorizationHeader(registeredClient3.id, registeredClient3.secret),
-          ).send({ token: validToken.value })
-          .expect(res => checkTokenIntrospection(res))
-          .end(done);
+       async () => {
+         const response =
+          await request(app)
+                  .post(TOKEN_INTROSPECTION_ENDPOINT)
+                  .set(
+                    'Authorization',
+                    createAuthorizationHeader(registeredClient3.id, registeredClient3.secret),
+                  ).send({ token: (validToken as IAccessToken).value });
+
+         checkTokenIntrospection(response);
        },
     );
 
     it('Should not return information about valid token without authentication', (done) => {
       request(app)
         .post(TOKEN_INTROSPECTION_ENDPOINT)
-        .send({ token: validToken.value })
+        .send({ token: (validToken as IAccessToken).value })
         .expect(401)
         .end(done);
     });
 
-    it('Should return only active status about inactive token', (done) => {
-      request(app)
-        .post(TOKEN_INTROSPECTION_ENDPOINT)
-        .set(
-          'Authorization',
-          createAuthorizationHeader(registeredClient2.id, registeredClient2.secret),
-        ).send({ token: validInactiveToken.value })
-        .expect(res => checkTokenIntrospection(res))
-        .end(done);
+    it('Should return only active status about inactive token', async () => {
+      const response =
+        await request(app)
+          .post(TOKEN_INTROSPECTION_ENDPOINT)
+          .set(
+            'Authorization',
+            createAuthorizationHeader(registeredClient3.id, registeredClient3.secret),
+          ).send({ token: (validInactiveToken as IAccessToken).value });
+
+      checkTokenIntrospection(response);
     });
 
     it('Should return only active status about unexists token', (done) => {
@@ -1584,10 +1681,10 @@ describe('OAuth2 Flows Functionality', () => {
       });
 
       const unexistToken2 = OAuth2Utils.createJWTAccessToken({
-        aud: registeredClient3.audienceId as string,
-        sub: registeredClient2._id,
-        scope: ['something2'],
-        clientId: registeredClient2.id,
+        aud: registeredClient2.audienceId as string,
+        sub: registeredClient.id,
+        scope: [(scopeOfClient1 as IScope).value],
+        clientId: registeredClient.id,
       });
 
       request(app)
