@@ -23,7 +23,8 @@
     "generate-jwks": "node ./scripts/generate_jwks.js",
     "bc": "node ./scripts/before_commit.js",
     "ac": "node ./scripts/after_commit.js",
-    "test": "npm run build-test && mocha dist/test.js dist/**/*.spec.js -t 15000 -r dotenv/config --exit"
+    "test": "npm run build-test && mocha dist/test.js dist/**/*.spec.js -t 15000 -r dotenv/config --exit",
+    "semantic-release": "semantic-release pre && semantic-release post"
   },
   "repository": {
     "type": "git",
@@ -58,13 +59,13 @@
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "jsonwebtoken": "^8.3.0",
-    "mongoose": "^5.2.7",
-    "morgan": "^1.9.0",
+    "mongoose": "^5.9.7",
+    "morgan": "^1.10.0",
     "nanoid": "^1.1.0",
     "oauth2orize": "^1.11.0",
     "passport": "^0.4.0",
     "passport-http": "^0.3.0",
-    "passport-http-bearer": "^1.0.1",    
+    "passport-http-bearer": "^1.0.1",
     "passport-oauth2-client-password": "^0.1.2",
     "passport-shraga": "^1.4.0",
     "passport-strategy": "^1.0.0",
@@ -72,6 +73,8 @@
     "winston-daily-rotate-file": "^3.10.0"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/git": "^9.0.0",
     "@types/body-parser": "^1.17.0",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
@@ -88,7 +91,7 @@
     "@types/oauth2orize": "^1.8.3",
     "@types/passport": "^0.4.6",
     "@types/passport-http": "^0.3.6",
-    "@types/passport-http-bearer": "^1.0.33",    
+    "@types/passport-http-bearer": "^1.0.33",
     "@types/passport-oauth2-client-password": "^0.1.2",
     "@types/passport-strategy": "^0.2.35",
     "@types/supertest": "^2.0.7",
@@ -98,6 +101,7 @@
     "node-forge": "^0.7.6",
     "node-jose": "^1.0.0",
     "nodemon": "^1.18.3",
+    "semantic-release": "^17.0.4",
     "supertest": "^3.3.0",
     "ts-node": "^7.0.0",
     "tslint": "^5.11.0",
