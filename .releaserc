@@ -1,7 +1,6 @@
 {
   "branches": ["master", "next"],
-  "repositoryUrl": "https://github.com/rabiran/OSpike",
-  "dryRun": true,
+  "repositoryUrl": "https://github.com/rabiran/OSpike",  
   "ci": false,
   "plugins": [
     ["@semantic-release/commit-analyzer",{
@@ -10,6 +9,7 @@
         {type: 'fix', release: 'minor'},
         {type: 'perf', release: 'patch'},
         {type: 'refactor', release: 'patch'},        
+        {type: 'chore', release: 'patch'},
       ]
     }],
     "@semantic-release/release-notes-generator",
