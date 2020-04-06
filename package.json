@@ -24,7 +24,7 @@
     "bc": "node ./scripts/before_commit.js",
     "ac": "node ./scripts/after_commit.js",
     "test": "npm run build-test && mocha dist/test.js dist/**/*.spec.js -t 15000 -r dotenv/config --exit",
-    "semantic-release": "semantic-release pre && semantic-release post"
+    "semantic-release": "semantic-release --no-ci"
   },
   "repository": {
     "type": "git",
