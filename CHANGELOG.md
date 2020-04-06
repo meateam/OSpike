@@ -1,9 +1,20 @@
+# [1.3.0](https://github.com/rabiran/OSpike/compare/v1.2.0...v1.3.0) (2020-04-06)
+
+
+### Bug Fixes
+
+* Reconfigure release configuration file to work well. ([6e5822a](https://github.com/rabiran/OSpike/commit/6e5822a29d87b5ebcfc6dafe4b2616c0cfd01515))
+
 # [1.2.0](https://github.com/rabiran/OSpike/compare/v1.1.1...v1.2.0) (2020-04-06)
 
 
 ### Bug Fixes
 
 * Fixing release commit analyzer rules ([27aa742](https://github.com/rabiran/OSpike/commit/27aa742b8de5e53f5bb5df6a5f169ddc8fb1d1a1))
+* Re-positioning part of the code to appropriate files for coherence, also
+self hosting the material icons and google fonts. ([bf8d9cf](https://github.com/rabiran/OSpike/commit/95f5ef853095b22b35a410987ca2e502c9295f7d))
+* Fix issue in passport errors returned by client manager strategy in the
+passport wrapper utility. ([95f5ef8](https://github.com/rabiran/OSpike/commit/1eda535aa0c71d6b8dde188798037bae597fe7f3))
 
 ## [1.1.1] (2020-03-26)
 
