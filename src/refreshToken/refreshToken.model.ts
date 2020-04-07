@@ -9,8 +9,6 @@ import {
 } from '../accessToken/accessToken.interface';
 import config from '../config';
 
-// TODO: Check if multiple refresh token reference the same access token
-
 const refreshTokenSchema = new Schema({
   value: {
     type: String,

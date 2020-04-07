@@ -1,7 +1,8 @@
 // wrapper
 
 import { Response, Request, NextFunction } from 'express';
-import { Unauthorized } from './error';
+import { Unauthorized, BaseError } from './error';
+import { PassportClientManagementError } from '../oauth2/management/management.error';
 
 export class Wrapper {
 
@@ -22,10 +23,15 @@ export class Wrapper {
    * @param next - Next function
    */
   static wrapPassportCallback(req: Request, res: Response, next: NextFunction) {
-    return function (error: any, user: any) {
+    return function (error: any, user: any, errorBody: any, status: any) {
+
+      // Self implemented strategy case - got error from client manager strategy
+      if (typeof errorBody === 'object' && errorBody.message && typeof status === 'number') {
+        return next(new PassportClientManagementError(errorBody.message, status));
+      }
 
       if (error) {
-        return next(new Unauthorized());
+        return next(error instanceof BaseError ? error : new Unauthorized());
       }
 
       if (!user) {

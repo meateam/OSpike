@@ -36,7 +36,6 @@ describe('Client Management Operations Functionality', async () => {
     name: 'RegisterdClient',
     hostUris: ['https://www.www'],
     redirectUris: ['/callback'],
-    scopes: ['read'],
   });
 
   let registerdClient2 = new clientModel({
@@ -88,7 +87,6 @@ describe('Client Management Operations Functionality', async () => {
     name: 'deleteClient',
     hostUris: ['https://rlwrwrwok.w'],
     redirectUris: ['/redirect'],
-    scopes: ['read'],
   });
 
   let deleteClient2 = new clientModel({
@@ -641,6 +639,7 @@ describe('Client Management Operations Functionality', async () => {
         userId: 'SomeUserId',
         scopes: [],
         audience: 'AudienceId',
+        userProperties: {},
       });
     });
 
@@ -654,7 +653,7 @@ describe('Client Management Operations Functionality', async () => {
          const updatedClient = ManagementController.resetClientCredentials(registerdClient5.id);
 
          return Promise.all([
-           expect(updatedClient).to.eventually.not.have.property(
+           expect(updatedClient).to.eventually.have.property(
              propertyOf<IClientInformation>('id'),
              registerdClient5.id,
            ),

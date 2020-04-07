@@ -9,6 +9,8 @@ import { errorMessages } from './management.routes';
 import clientModel from '../../client/client.model';
 import accessTokenModel from '../../accessToken/accessToken.model';
 import authCodeModel from '../../authCode/authCode.model';
+import scopeModel from '../../scope/scope.model';
+import { IScope } from '../../scope/scope.interface';
 import {
   propertyOf,
   dismantleNestedProperties,
@@ -21,7 +23,12 @@ import config from '../../config';
 
 describe('Client Management Routes Functionality', () => {
 
-  const registerEndpoint = `${config.OAUTH_ENDPOINT}/${config.OAUTH_MANAGEMENT_ENDPOINT}`;
+  const registerEndpoint = `${config.OAUTH_ENDPOINT}${config.OAUTH_MANAGEMENT_ENDPOINT}`;
+
+  const clientManagerAudienceId = 'clientManagerAudience';
+
+  let clientManagerScope: IScope | null = null;
+  let notClientManagerScope: IScope | null = null;
 
   const validClientInformation: IClientBasicInformation =  {
     name: 'TestName',
@@ -49,7 +56,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'ClientRegistrer',
     hostUris: ['https://client.register.com'],
     redirectUris: ['/oauth2/callback'],
-    scopes: [config.CLIENT_MANAGER_SCOPE],
   });
 
   let notClientRegistrer = new clientModel({
@@ -60,7 +66,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'notClientRegistrer',
     hostUris: ['https://verynotclient.register.com'],
     redirectUris: ['/callback/not/registrer'],
-    scopes: ['blabla'],
   });
 
   let registeredClient = new clientModel({
@@ -71,7 +76,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'registeredClient',
     hostUris: ['https://registeredClient.register.com'],
     redirectUris: ['/callback/some1'],
-    scopes: ['something'],
   });
 
   let registeredClient2 = new clientModel({
@@ -82,7 +86,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'registeredClient2',
     hostUris: ['https://registeredClient.register.com2'],
     redirectUris: ['/callback/some12'],
-    scopes: ['something2'],
   });
 
   let updatedClient = new clientModel({
@@ -93,7 +96,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'updatedClient',
     hostUris: ['https://updatedClient.register.com'],
     redirectUris: ['/callback/very/nice'],
-    scopes: ['something-new'],
   });
 
   let updatedClient2 = new clientModel({
@@ -104,7 +106,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'updatedClient2',
     hostUris: ['https://updatedClient2.register.com'],
     redirectUris: ['/callback/4u'],
-    scopes: ['something-new2'],
   });
 
   let deletedClient = new clientModel({
@@ -115,7 +116,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'deletedClientName',
     hostUris: ['https://deletedClient.com'],
     redirectUris: ['/callback/deleted/me'],
-    scopes: ['something-new-delete'],
   });
 
   let deletedClient2 = new clientModel({
@@ -126,7 +126,6 @@ describe('Client Management Routes Functionality', () => {
     name: 'deletedClientName2',
     hostUris: ['https://deletedClient2.com'],
     redirectUris: ['/callback/me/again'],
-    scopes: ['something-new-delete2'],
   });
 
   const updatedInformation: IClientBasicInformation = {
@@ -170,6 +169,28 @@ describe('Client Management Routes Functionality', () => {
     updatedClient2 = await updatedClient2.save();
     deletedClient = await deletedClient.save();
     deletedClient2 = await deletedClient2.save();
+
+    await new clientModel({
+      id: 'clientManagerID',
+      secret: 'clientManagerSecret',
+      audienceId: clientManagerAudienceId,
+      registrationToken: 'clientManagerRegistrationToken',
+      name: 'clientManager',
+      hostUris: ['https://clientManager.com'],
+      redirectUris: ['/callback'],
+    }).save();
+
+    clientManagerScope = await new scopeModel({
+      value: config.CLIENT_MANAGER_SCOPE,
+      audienceId: clientManagerAudienceId,
+      permittedClients: [clientRegistrer._id],
+    }).save();
+
+    notClientManagerScope = await new scopeModel({
+      value: 'blabla',
+      audienceId: registeredClient2.audienceId,
+      permittedClients: [notClientRegistrer._id],
+    }).save();
   });
 
   after(async () => {
@@ -183,8 +204,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: clientRegistrer._id,
         audience: config.issuerHostUri,
         value: '123456789',
-        scopes: [config.CLIENT_MANAGER_SCOPE],
-        grantType: 'client_credentials',
+        scopes: [(clientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -192,8 +213,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: notClientRegistrer._id,
         audience: config.issuerHostUri,
         value: '987654321',
-        scopes: ['blabla'],
-        grantType: 'client_credentials',
+        scopes: [(notClientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
     });
@@ -269,8 +290,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: clientRegistrer._id,
         audience: config.issuerHostUri,
         value: '123456789',
-        scopes: [config.CLIENT_MANAGER_SCOPE],
-        grantType: 'client_credentials',
+        scopes: [(clientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -278,8 +299,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: notClientRegistrer._id,
         audience: config.issuerHostUri,
         value: '987654321',
-        scopes: ['blabla'],
-        grantType: 'client_credentials',
+        scopes: [(notClientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
     });
@@ -396,8 +417,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: clientRegistrer._id,
         audience: config.issuerHostUri,
         value: '123456789',
-        scopes: [config.CLIENT_MANAGER_SCOPE],
-        grantType: 'client_credentials',
+        scopes: [(clientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -405,8 +426,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: notClientRegistrer._id,
         audience: config.issuerHostUri,
         value: '987654321',
-        scopes: ['blabla'],
-        grantType: 'client_credentials',
+        scopes: [(notClientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
     });
@@ -564,8 +585,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: clientRegistrer._id,
         audience: config.issuerHostUri,
         value: '123456789',
-        scopes: [config.CLIENT_MANAGER_SCOPE],
-        grantType: 'client_credentials',
+        scopes: [(clientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -573,8 +594,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: notClientRegistrer._id,
         audience: config.issuerHostUri,
         value: '987654321',
-        scopes: ['blabla'],
-        grantType: 'client_credentials',
+        scopes: [(notClientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -582,7 +603,7 @@ describe('Client Management Routes Functionality', () => {
         value: 'AccessTokenJWTValue',
         clientId: registeredClient2._id,
         audience: 'SomeAudienceId',
-        grantType: 'client_credentials',
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         scopes: [],
       });
       await authCodeModel.create({
@@ -592,6 +613,7 @@ describe('Client Management Routes Functionality', () => {
         userId: 'SomeUserId',
         scopes: [],
         audience: 'AudienceId',
+        userProperties: {},
       });
     });
 
@@ -607,7 +629,7 @@ describe('Client Management Routes Functionality', () => {
                  .set(config.CLIENT_MANAGER_AUTHORIZATION_HEADER, clientRegistrerAccessToken.value)
                  .set('Authorization', registeredClient2.registrationToken);
 
-         expect(response.body).to.not.have.property(
+         expect(response.body).to.have.property(
            propertyOf<IClientInformation>('id'),
            registeredClient2.id,
          );
@@ -717,8 +739,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: clientRegistrer._id,
         audience: config.issuerHostUri,
         value: '123456789',
-        scopes: [config.CLIENT_MANAGER_SCOPE],
-        grantType: 'client_credentials',
+        scopes: [(clientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
 
@@ -726,8 +748,8 @@ describe('Client Management Routes Functionality', () => {
         clientId: notClientRegistrer._id,
         audience: config.issuerHostUri,
         value: '987654321',
-        scopes: ['blabla'],
-        grantType: 'client_credentials',
+        scopes: [(notClientManagerScope as IScope)._id],
+        grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
         expiresAt: 999999999999,
       }).save();
     });

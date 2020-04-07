@@ -14,8 +14,6 @@ export const ensureAuthenticatedMiddleware =
 
     // Save the url the user tried to get to, so after authentication redirect
     // him to it
-    console.log(req.url);
-    console.log(req.originalUrl);
     const relayState = Buffer.from(req.originalUrl).toString('base64');
 
     // Redirect the user to perform authentication

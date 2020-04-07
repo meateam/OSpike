@@ -1,6 +1,6 @@
 // authCode.validator
 
-import { refValidator, uniqueValidator } from '../generic/generic.validator';
+import { refValidator } from '../generic/generic.validator';
 import { collectionName } from './authCode.interface';
 
 // Auth Code reference validator
