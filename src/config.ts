@@ -45,7 +45,10 @@ const config = {
   OAUTH_USER_LOGIN_ENDPOINT: '/login',
 
   // OAuth2 Management Routes
-  OAUTH_MANAGEMENT_ENDPOINT: '/register',
+  OAUTH_MANAGEMENT_ENDPOINT: '/management',
+  OAUTH_MANAGEMENT_CLIENT_ENDPOINT: '/client',
+  OAUTH_MANAGEMENT_SCOPE_ENDPOINT: '/scope',
+  OAUTH_MANAGEMENT_PERMISSION_ENDPOINT: '/user',
 
   // OAuth2 User Permission Management Routes
   OAUTH_PERMISSION_MANAGEMENT_ENDPOINT: '/user-permissions',

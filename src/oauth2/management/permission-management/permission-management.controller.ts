@@ -1,10 +1,10 @@
 // permission-management.controller
 
-import userPermissionModel from '../../user-permission/user-permission.model';
-import { collectionName as clientModelName, IClient } from '../../client/client.interface';
-import { collectionName as scopeModelName, IScope } from '../../scope/scope.interface';
-import { IUserPermission } from '../../user-permission/user-permission.interface';
-import { propertyOf } from '../../utils/objectUtils';
+import userPermissionModel from '../../../user-permission/user-permission.model';
+import { collectionName as clientModelName, IClient } from '../../../client/client.interface';
+import { collectionName as scopeModelName, IScope } from '../../../scope/scope.interface';
+import { IUserPermission } from '../../../user-permission/user-permission.interface';
+import { propertyOf } from '../../../utils/objectUtils';
 
 // Represent grouped user permission details object, as returned from
 // 'getAllUserPermissions' function

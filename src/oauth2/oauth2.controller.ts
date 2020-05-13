@@ -572,7 +572,7 @@ export const authorizationEndpoint = [
       }
 
       // The client does not have permission to the requested scopes
-      throw new InsufficientScopes(errorMessages.INSUFFICIENT_SCOPE_FOR_CLIENT);
+      return done(new InsufficientScopes(errorMessages.INSUFFICIENT_SCOPE_FOR_CLIENT));
     },
 
   ),

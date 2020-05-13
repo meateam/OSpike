@@ -2,7 +2,7 @@
 
 import { Schema, model } from 'mongoose';
 import { collectionName as ClientModelName } from '../client/client.interface';
-import { IScope, collectionName } from './scope.interface';
+import { IScope, collectionName, ScopeType } from './scope.interface';
 import { clientRefValidator, clientRefValidatorByAudId } from '../client/client.validator';
 
 const scopeSchema = new Schema(
@@ -25,6 +25,11 @@ const scopeSchema = new Schema(
     description: {
       type: String,
       default: 'No description provided',
+    },
+    type: {
+      type: String,
+      enum: Object.keys(ScopeType),
+      default: ScopeType.PRIVATE,
     },
   },
   {

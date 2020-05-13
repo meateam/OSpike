@@ -8,7 +8,6 @@ export interface IClientBasicInformation {
   name: IClient['name'];
   redirectUris: IClient['redirectUris'];
   hostUris: IClient['hostUris'];
-  scopes?: IClient['scopes'];
 }
 
 export const numIClientBasicInformationLength = 4;
