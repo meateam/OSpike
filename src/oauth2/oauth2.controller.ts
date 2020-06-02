@@ -103,6 +103,7 @@ server.grant(oauth2orize.grant.token(async (client, user, ares, done) => {
           sub: user.id,
           scope: ScopeUtils.transformScopeModelsToRawScopes(ares.scope),
           clientId: client.id,
+          clientName: client.name,
         },
         user,
       ),
@@ -159,6 +160,7 @@ server.exchange(oauth2orize.exchange.code(
               sub: authCode.userId as string,
               scope: ScopeUtils.transformScopeModelsToRawScopes(<IScope[]>authCode.scopes),
               clientId: client.id,
+              clientName: client.name,
             },
             authCode.userProperties,
           ),
@@ -344,6 +346,7 @@ server.exchange(oauth2orize.exchange.clientCredentials(
           // scope: client.scopes, // Change this to body.scope
           scope: ScopeUtils.transformScopeModelsToRawScopes(permittedScopesForClient),
           clientId: client.id,
+          clientName: client.name,
         }),
         clientId: client._id,
         audience: body.audience,
@@ -414,6 +417,7 @@ server.exchange(oauth2orize.exchange.refreshToken(async (client, refreshToken, s
               <IScope[]>(<IAccessToken>refreshTokenDoc.accessTokenId).scopes,
             ),
             clientId: (<IClient>(<IAccessToken>refreshTokenDoc.accessTokenId).clientId).id,
+            clientName: (<IClient>(<IAccessToken>refreshTokenDoc.accessTokenId).clientId).name,
           },
           refreshTokenDoc.userProperties,
         ),
@@ -542,7 +546,7 @@ export const authorizationEndpoint = [
       // }
 
       // TODO: Maybe consider refactor the scopes validation in one function for both client
-      //       and user, also in one big mongodb query (which will eventually more efficient)
+      //       and user, also in one big mongodb query (which will eventually more efficient)      
 
       // Otherwise, the client requested new/different scopes (or maybe new token) behalf
       // the user, so we need to check if the client have permission for the scopes he requested
@@ -572,7 +576,7 @@ export const authorizationEndpoint = [
       }
 
       // The client does not have permission to the requested scopes
-      throw new InsufficientScopes(errorMessages.INSUFFICIENT_SCOPE_FOR_CLIENT);
+      return done(new InsufficientScopes(errorMessages.INSUFFICIENT_SCOPE_FOR_CLIENT));
     },
 
   ),
@@ -581,14 +585,20 @@ export const authorizationEndpoint = [
   // like in https://github.com/scottksmith95/beerlocker/blob/master/beerlocker-6.1/controllers/oauth2.js#L126
 
   // TODO: Implement request handler for the user stage of allow authorization to requested scopes
-  (req: any, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
+
+    // TODO: Refactor audience name extraction - move it to the previous chanin
+    //       and include it in efficiend mongodb query
+
+    // Getting the audience name for display
+    const audienceClient = (await clientModel.findOne({ audienceId: req.oauth2.info.audience }));
 
     // Render decision page for user
     res.render('decision', {
       transactionID: req.oauth2.transactionID,
       user: req.user,
       client: req.oauth2.client,
-      audience: req.oauth2.info.audience,
+      audience: audienceClient ? audienceClient.name : req.oauth2.info.audience,
       scopes: req.oauth2.info.scope,
     });
   },

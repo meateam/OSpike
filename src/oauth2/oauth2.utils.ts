@@ -44,6 +44,7 @@ export interface JWTPayloadData {
   sub: string; // The subject of the JWT (the user/client the JWT generated for)
   scope: string[]; // The scopes for the JWT
   clientId: string;
+  clientName: string;
 }
 
 export class OAuth2Utils {
