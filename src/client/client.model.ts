@@ -63,16 +63,19 @@ clientSchema.methods.isValidRedirectUri = function (this: IClient, redirectUri: 
 
   let urlFormatedRedirectUri = null;
   let extractedRedirectUri = null;
+  let extractedHostUri = null;
 
   try {
     urlFormatedRedirectUri = new URL(redirectUri);
     extractedRedirectUri = urlFormatedRedirectUri.href.slice(urlFormatedRedirectUri.origin.length);
+    extractedHostUri = urlFormatedRedirectUri.port === '' ?
+     urlFormatedRedirectUri.origin + ':443' : urlFormatedRedirectUri.origin;
   } catch (err) {
     return false;
   }
 
   return (
-    this.hostUris.indexOf(urlFormatedRedirectUri.origin) !== -1 &&
+    this.hostUris.indexOf(extractedHostUri) !== -1 &&
     this.redirectUris.indexOf(extractedRedirectUri) !== -1
   );
 };

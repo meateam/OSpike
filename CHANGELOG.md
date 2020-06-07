@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/rabiran/OSpike/compare/v1.3.0...v1.4.0) (2020-06-02)
+
+
+### Bug Fixes
+
+* Fix client redirect uri validation and add clientName in token contents ([5f93720](https://github.com/rabiran/OSpike/commit/5f9372071aa06b797e01b056a4529c1ebcfa4e09))
+
 # [1.3.0](https://github.com/rabiran/OSpike/compare/v1.2.0...v1.3.0) (2020-04-06)
 
 
