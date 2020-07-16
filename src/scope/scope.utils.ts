@@ -51,13 +51,13 @@ export class ScopeUtils {
    */
   static async getAllScopesForClientAndAudience(client: IClient, audienceId: string) {
 
-    return await scopeModel.find({ audienceId, permittedClients: client._id }) as IScope[];
+    return await scopeModel.find({ audienceId, permittedClients: client.id }) as IScope[];
   }
 
   /**
    * Checking sufficient scopes requested by the client.
    * Returns boolean indicates if requested scopes by the client are permitted.
-   * @param clientId - object id of the client which requesting permission to the scopes
+   * @param clientId - Client id of the client which requesting permission to the scopes
    * @param audienceId - the audience id the client requested scopes from
    * @param scopes - scopes requested by the client
    */

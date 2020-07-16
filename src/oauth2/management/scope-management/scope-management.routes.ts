@@ -40,8 +40,8 @@ const authenticateManagementMiddleware =
 
 export const errorMessages = {
   MISSING_SCOPE_INFORMATION: 'Scope information parameter is missing',
-  MISSING_SCOPE_ID: 'Scope id request parameter is missing',
-  MISSING_SCOPE_ID_OR_INFORMATION: 'Scope id or scope information parameter is missing',
+  MISSING_AUDIENCE_ID_OR_VALUE: 'Audience id or scope value request parameter is missing',
+  MISSING_SCOPE_ID_OR_INFORMATION: 'Scope id or scope information parameter is missing',  
   MISSING_SCOPES_FILTER: `Missing 'clientId' or 'audienceId' parameter to filter scopes`,
   NOT_FOUND_SCOPE: 'Scope not found',
   NOT_FOUND_SCOPES: 'Scopes for that client id / audience are not found',
@@ -51,7 +51,7 @@ export const scopeManagementRouter = Router();
 
 // Create scope endpoint
 scopeManagementRouter.post(
-  config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT,
+  `${config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT}/:clientId`,
   authenticateManagementMiddleware,
   Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
@@ -90,49 +90,49 @@ scopeManagementRouter.post(
   },
 ));
 
-// Get specific scope information endpoint
-scopeManagementRouter.get(
-  `${config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT}/:scopeId`,
-  authenticateMiddleware,
-  Wrapper.wrapAsync(async (req: Request, res: Response) => {
+// // Get specific scope information endpoint
+// scopeManagementRouter.get(
+//   `${config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT}/:scopeId`,
+//   authenticateMiddleware,
+//   Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-    // If the request contains the scope id
-    if (req.params.scopeId) {
-      const scopeInformation = await ScopeManagementController.getScopeById(req.params.scopeId);
+//     // If the request contains the scope id
+//     if (req.params.scopeId) {
+//       const scopeInformation = await ScopeManagementController.getScopeById(req.params.scopeId);
 
-      log(
-        LOG_LEVEL.INFO,
-        parseLogData(
-          'Scope Management Router',
-          `Received from ${req.headers['x-forwarded-for']}, Operation - Read scope. ${'\r\n'
-            } Scope Id: ${req.params.clientId}`,
-          200,
-          null,
-        ),
-      );
+//       log(
+//         LOG_LEVEL.INFO,
+//         parseLogData(
+//           'Scope Management Router',
+//           `Received from ${req.headers['x-forwarded-for']}, Operation - Read scope. ${'\r\n'
+//             } Scope Id: ${req.params.clientId}`,
+//           200,
+//           null,
+//         ),
+//       );
 
-      // If scope not found
-      if (!scopeInformation) {
-        throw new ScopeNotFound(errorMessages.NOT_FOUND_SCOPE);
-      }
+//       // If scope not found
+//       if (!scopeInformation) {
+//         throw new ScopeNotFound(errorMessages.NOT_FOUND_SCOPE);
+//       }
 
-      return res.status(200).send(scopeInformation);
-    }
+//       return res.status(200).send(scopeInformation);
+//     }
 
-    log(
-      LOG_LEVEL.INFO,
-      parseLogData(
-        'Scope Management Router',
-        `Received from ${req.headers['x-forwarded-for']}, Operation - Read scope. ${'\r\n'
-          }Results: Missing scope id`,
-        400,
-        null,
-      ),
-    );
+//     log(
+//       LOG_LEVEL.INFO,
+//       parseLogData(
+//         'Scope Management Router',
+//         `Received from ${req.headers['x-forwarded-for']}, Operation - Read scope. ${'\r\n'
+//           }Results: Missing scope id`,
+//         400,
+//         null,
+//       ),
+//     );
 
-    throw new InvalidScopeInformation(errorMessages.MISSING_SCOPE_ID);
-  },
-));
+//     throw new InvalidScopeInformation(errorMessages.MISSING_AUDIENCE_ID_OR_VALUE);
+//   },
+// ));
 
 // Get scopes information endpoint
 scopeManagementRouter.get(
@@ -189,16 +189,18 @@ scopeManagementRouter.get(
 
 // Update scope information endpoint
 scopeManagementRouter.put(
-  `${config.OAUTH_MANAGEMENT_ENDPOINT}/:scopeId`,
+  `${config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT}`,
   authenticateManagementMiddleware,
   Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-    // If the request contains the scope id and update scope information
-    // also if the requester updating scopes that belongs to him onlu
-    // TODO: Need to check if the reuqester updating scope belong to him
-    if (req.params.scopeId && req.body.scopeInformation) {
+    // Checking if the scope information parameter is included,
+    // and contains audienceId and value for identificaiton of the scope
+    if (req.body.scopeInformation && req.body.scopeInformation.audienceId && req.body.scopeInformation.value) {
+
+      // Update the scope
       const updatedScope = await ScopeManagementController.updateScope(
-        req.params.scopeId,
+        req.body.scopeInformation.audienceId,
+        req.body.scopeInformation.value,
         req.body.scopeInformation,
       );
 
@@ -227,27 +229,27 @@ scopeManagementRouter.put(
       parseLogData(
         'Scope Management Router',
         `Received from ${req.headers['x-forwarded-for']}, Operation - Update scope. ${'\r\n'
-          }Results: Missing scope id or information`,
+          }Results: Missing audienceId or value in scope information`,
         400,
         null,
       ),
     );
 
-    throw new InvalidScopeInformation(errorMessages.MISSING_SCOPE_ID_OR_INFORMATION);
+    throw new InvalidScopeInformation(errorMessages.MISSING_AUDIENCE_ID_OR_VALUE);
   },
 ));
 
 // Delete scope endpoint
 scopeManagementRouter.delete(
-  `${config.OAUTH_MANAGEMENT_ENDPOINT}/:scopeId`,
+  `${config.OAUTH_MANAGEMENT_SCOPE_ENDPOINT}`,
   authenticateManagementMiddleware,
   Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-    // If the request contains the scope id
-    if (req.params.scopeId) {
+    // If the request contains the scope audience id and scope value
+    if (req.query.audienceId && req.query.value) {
 
       // If the deletion succeed
-      if (await ScopeManagementController.deleteScope(req.params.scopeId)) {
+      if (await ScopeManagementController.deleteScope(req.query.audienceId, req.query.value)) {
 
         log(
           LOG_LEVEL.INFO,
@@ -283,12 +285,12 @@ scopeManagementRouter.delete(
       parseLogData(
         'Scope Management Router',
         `Received from ${req.headers['x-forwarded-for']}, Operation - Delete scope. ${'\r\n'
-          }Results: Missing scope id`,
+          }Results: Missing scope audience id or scope value`,
         400,
         null,
       ),
     );
 
-    throw new InvalidScopeInformation(errorMessages.MISSING_SCOPE_ID);
+    throw new InvalidScopeInformation(errorMessages.MISSING_AUDIENCE_ID_OR_VALUE);
   },
 ));

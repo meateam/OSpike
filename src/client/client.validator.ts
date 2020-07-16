@@ -17,6 +17,11 @@ export const clientRefValidatorByAudId = [
   `Reference Error - ${collectionName} {VALUE} does not exist`,
 ];
 
+export const clientRefValidatorByClientId = [
+  refValidator.bind({}, collectionName, propertyOf<IClient>('id')),
+  `Reference Error - ${collectionName} {VALUE} does not exist`,
+];
+
 // HostUris regex validator
 export const hostUrisRegexValidator: [(value: string[]) => boolean, string] = [
   (value: string[]): boolean => {

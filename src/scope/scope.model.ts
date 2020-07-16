@@ -3,7 +3,7 @@
 import { Schema, model } from 'mongoose';
 import { collectionName as ClientModelName } from '../client/client.interface';
 import { IScope, collectionName, ScopeType } from './scope.interface';
-import { clientRefValidator, clientRefValidatorByAudId } from '../client/client.validator';
+import { clientRefValidatorByAudId, clientRefValidatorByClientId } from '../client/client.validator';
 
 const scopeSchema = new Schema(
   {
@@ -18,7 +18,7 @@ const scopeSchema = new Schema(
       validate: clientRefValidatorByAudId as any,
     },
     permittedClients: {
-      type: [{ type: Schema.Types.ObjectId, ref: ClientModelName, validate: clientRefValidator }],
+      type: [{ type: String, ref: ClientModelName, validate: clientRefValidatorByClientId }],
       required: true,
       default: [],
     },

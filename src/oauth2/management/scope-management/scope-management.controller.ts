@@ -74,12 +74,18 @@ export class ScopeManagementController {
 
   /**
    * Updating scope information for existing scope
-   * @param scopeId - the scope's object id
+   * @param audienceId - The audience id of the scope.
+   * @param value - The value of the scope.   
    * @param scopeInformation - the scope update information
    */
-  static async updateScope(scopeId: string, scopeInformation: IScopeUpdateInformation) {
+  static async updateScope(audienceId: string, value: string, scopeInformation: IScopeUpdateInformation) {
     if (isIScopeUpdateInformation(scopeInformation)) {
-      const currentScope = await scopeModel.updateOne({ _id: scopeId }, { $set: scopeInformation });
+      // Currently setting only the permitted clients
+      const currentScope = await scopeModel.updateOne(
+        { audienceId, value },
+        { $set: { permittedClients: [...new Set(scopeInformation.permittedClients as string[])] } },
+        { new: true }
+      );
       return currentScope;
     }
 
@@ -88,10 +94,11 @@ export class ScopeManagementController {
 
   /**
    * Deleting existing scope
-   * @param scopeId - the scope's object id
+   * @param audienceId - the scope's audience id
+   * @param value - the scope's value
    */
-  static async deleteScope(scopeId: string) {
-    const deletedScope = await scopeModel.findOneAndRemove({ _id: scopeId });
+  static async deleteScope(audienceId: string, value: string) {
+    const deletedScope = await scopeModel.findOneAndRemove({ audienceId, value });
 
     if (deletedScope) {
       return true;
