@@ -35,8 +35,9 @@ const clientSchema = new Schema({
     required: true,
     validate: redirectUrisValidator,
   },
-  scopes: {
-    type: [String],
+  description: {
+    type: String,
+    default: 'No description provided.',
   },
   hostUris: {
     type: [String],

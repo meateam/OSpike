@@ -9,10 +9,12 @@ import {
 //  loginMethod,
   tokenIntrospectionEndpoint,
 } from './oauth2.controller';
-import { setManagementRoutes } from './management/management.routes';
+import { managementRouter } from './management/management.routes';
+import { scopeManagementRouter } from './management/scope-management/scope-management.routes';
 import {
-  setPermissionManagementRoutes,
-} from './permission-management/permission-management.routes';
+  userPermissionRouter,
+} from './management/permission-management/permission-management.routes';
+import config from '../config';
 
 const router = Router();
 
@@ -27,9 +29,12 @@ router.post('/decision', decisionEndpoint);
 // router.post('/login', loginMethod);
 
 // Management routes
-setManagementRoutes(router);
+router.use(config.OAUTH_MANAGEMENT_ENDPOINT, managementRouter);
+
+// Scopes management routes
+router.use(config.OAUTH_MANAGEMENT_ENDPOINT, scopeManagementRouter);
 
 // User permission management routes
-setPermissionManagementRoutes(router);
+router.use(config.OAUTH_MANAGEMENT_ENDPOINT, userPermissionRouter);
 
 export default router;

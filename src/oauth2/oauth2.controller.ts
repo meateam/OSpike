@@ -328,7 +328,7 @@ server.exchange(oauth2orize.exchange.clientCredentials(
     // }
 
     // Check if audience specified
-    if (!body.audience) {
+    if (!body.audience) {      
       return done(new BadRequest(errorMessages.MISSING_AUDIENCE));
     }
 
@@ -336,7 +336,7 @@ server.exchange(oauth2orize.exchange.clientCredentials(
 
       // Getting all permitted scopes for client by audienceId
       const permittedScopesForClient =
-        await ScopeUtils.getAllScopesForClientAndAudience(client, body.audience);
+        await ScopeUtils.getAllScopesForClientAndAudience(client, body.audience);      
 
       // Change scopes values when working on scopes feature
       const accessToken = await new accessTokenModel({
@@ -551,7 +551,7 @@ export const authorizationEndpoint = [
       // Otherwise, the client requested new/different scopes (or maybe new token) behalf
       // the user, so we need to check if the client have permission for the scopes he requested
       if (await ScopeUtils.checkSufficientScopes(
-            oauth2.client._id, oauth2.locals.audience, oauth2.req.scope,
+            oauth2.client.id, oauth2.locals.audience, oauth2.req.scope,
           )) {
 
         // Get the scopes models from the db to pass on request

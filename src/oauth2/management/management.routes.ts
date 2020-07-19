@@ -45,229 +45,229 @@ export const errorMessages = {
     `Client id request parameter or client information parameter is missing`,
 };
 
-export const setManagementRoutes = (router: Router) => {
-  // Register client endpoint
-  router.post(
-    config.OAUTH_MANAGEMENT_ENDPOINT,
-    authenticateMiddleware,
-    Wrapper.wrapAsync(async (req: Request, res: Response) => {
+export const managementRouter = Router();
 
-      // If the request contains the client information
-      if (req.body.clientInformation) {
-        const clientInformation =
-          await ManagementController.registerClient(req.body.clientInformation);
+// Register client endpoint
+managementRouter.post(
+  config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT,
+  authenticateMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-        log(
-          LOG_LEVEL.INFO,
-          parseLogData(
-            'Client Management Router',
-            `Received from ${req.headers['x-forwarded-for']}, Operation - Register client. ${'\r\n'
-             } Client information: ${JSON.stringify(req.body.clientInformation)}`,
-            201,
-            null,
-          ),
-        );
-
-        return res.status(201).send(clientInformation);
-      }
+    // If the request contains the client information
+    if (req.body.clientInformation) {
+      const clientInformation =
+        await ManagementController.registerClient(req.body.clientInformation);
 
       log(
         LOG_LEVEL.INFO,
         parseLogData(
           'Client Management Router',
           `Received from ${req.headers['x-forwarded-for']}, Operation - Register client. ${'\r\n'
-           }Results: Missing client information`,
-          400,
+            } Client information: ${JSON.stringify(req.body.clientInformation)}`,
+          201,
           null,
         ),
       );
 
-      throw new InvalidParameter(errorMessages.MISSING_CLIENT_INFORMATION);
-    },
-  ));
+      return res.status(201).send(clientInformation);
+    }
 
-  // Read client information endpoint
-  router.get(
-    `${config.OAUTH_MANAGEMENT_ENDPOINT}/:clientId`,
-    authenticateManagementMiddleware,
-    Wrapper.wrapAsync(async (req: Request, res: Response) => {
+    log(
+      LOG_LEVEL.INFO,
+      parseLogData(
+        'Client Management Router',
+        `Received from ${req.headers['x-forwarded-for']}, Operation - Register client. ${'\r\n'
+          }Results: Missing client information`,
+        400,
+        null,
+      ),
+    );
 
-      // If the request contains the client registration token and id
-      if (req.params.clientId) {
-        const clientInformation = await ManagementController.readClient(req.params.clientId);
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_INFORMATION);
+  },
+));
 
-        log(
-          LOG_LEVEL.INFO,
-          parseLogData(
-            'Client Management Router',
-            `Received from ${req.headers['x-forwarded-for']}, Operation - Read client. ${'\r\n'
-             } Client Id: ${req.params.clientId}`,
-            200,
-            null,
-          ),
-        );
+// Read client information endpoint
+managementRouter.get(
+  `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId`,
+  authenticateManagementMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-        return res.status(200).send(clientInformation);
-      }
+    // If the request contains the client registration token and id
+    if (req.params.clientId) {
+      const clientInformation = await ManagementController.readClient(req.params.clientId);
 
       log(
         LOG_LEVEL.INFO,
         parseLogData(
           'Client Management Router',
           `Received from ${req.headers['x-forwarded-for']}, Operation - Read client. ${'\r\n'
-           }Results: Missing client id`,
-          400,
+            } Client Id: ${req.params.clientId}`,
+          200,
           null,
         ),
       );
 
-      throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
-    },
-  ));
+      return res.status(200).send(clientInformation);
+    }
 
-  // Update client information endpoint
-  router.put(
-    `${config.OAUTH_MANAGEMENT_ENDPOINT}/:clientId`,
-    authenticateManagementMiddleware,
-    Wrapper.wrapAsync(async (req: Request, res: Response) => {
+    log(
+      LOG_LEVEL.INFO,
+      parseLogData(
+        'Client Management Router',
+        `Received from ${req.headers['x-forwarded-for']}, Operation - Read client. ${'\r\n'
+          }Results: Missing client id`,
+        400,
+        null,
+      ),
+    );
 
-      // If the request contains the client registration token and id and update client information
-      if (req.params.clientId && req.body.clientInformation) {
-        const clientInformation =
-          await ManagementController.updateClient(req.params.clientId, req.body.clientInformation);
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
+  },
+));
 
-        log(
-          LOG_LEVEL.INFO,
-          parseLogData(
-            'Client Management Router',
-            `Received from ${req.headers['x-forwarded-for']}, Operation - Update client. ${'\r\n'
-             }Client Id: ${req.params.clientId} ${'\r\n'
-             }New Client information: ${req.body.clientInformation}`,
-            200,
-            null,
-          ),
-        );
+// Update client information endpoint
+managementRouter.put(
+  `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId`,
+  authenticateManagementMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-        return res.status(200).send(clientInformation);
-      }
+    // If the request contains the client registration token and id and update client information
+    if (req.params.clientId && req.body.clientInformation) {
+      const clientInformation =
+        await ManagementController.updateClient(req.params.clientId, req.body.clientInformation);
 
       log(
         LOG_LEVEL.INFO,
         parseLogData(
           'Client Management Router',
           `Received from ${req.headers['x-forwarded-for']}, Operation - Update client. ${'\r\n'
-           }Results: Missing client id or information`,
-          400,
+            }Client Id: ${req.params.clientId} ${'\r\n'
+            }New Client information: ${req.body.clientInformation}`,
+          200,
           null,
         ),
       );
 
-      throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID_OR_INFORMATION);
-    },
-  ));
+      return res.status(200).send(clientInformation);
+    }
 
-  // Reset client credentials endpoint
-  router.patch(
-    `${config.OAUTH_MANAGEMENT_ENDPOINT}/:clientId`,
-    authenticateManagementMiddleware,
-    Wrapper.wrapAsync(async (req: Request, res: Response) => {
+    log(
+      LOG_LEVEL.INFO,
+      parseLogData(
+        'Client Management Router',
+        `Received from ${req.headers['x-forwarded-for']}, Operation - Update client. ${'\r\n'
+          }Results: Missing client id or information`,
+        400,
+        null,
+      ),
+    );
 
-      // If the request contains the client registration token and id
-      if (req.params.clientId) {
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID_OR_INFORMATION);
+  },
+));
 
-        // Resetting the client credentials and access tokens and auth codes
-        const newClientDoc = await ManagementController.resetClientCredentials(req.params.clientId);
+// Reset client credentials endpoint
+managementRouter.patch(
+  `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId`,
+  authenticateManagementMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
 
-        // If successfully created new client
-        if (newClientDoc) {
+    // If the request contains the client registration token and id
+    if (req.params.clientId) {
 
-          log(
-            LOG_LEVEL.INFO,
-            parseLogData(
-              'Client Management Router',
-              `Received from ${req.headers['x-forwarded-for']}, Operation - Reset Client. ${'\r\n'
-               } Client Id: ${newClientDoc.id} ${'\r\n'} Client Name: ${newClientDoc.name}`,
-              200,
-              null,
-            ),
-          );
+      // Resetting the client credentials and access tokens and auth codes
+      const newClientDoc = await ManagementController.resetClientCredentials(req.params.clientId);
 
-          return res.status(200).send(newClientDoc);
-        }
+      // If successfully created new client
+      if (newClientDoc) {
 
         log(
-          LOG_LEVEL.ERROR,
+          LOG_LEVEL.INFO,
           parseLogData(
             'Client Management Router',
-            `Unknown Error: Received from ${req.headers['x-forwarded-for']
-             }, Operation - Reset Client. ${'\r\n'
-             } Results: Client id - ${req.params.id} is not reset due unknown error. `,
-            500,
+            `Received from ${req.headers['x-forwarded-for']}, Operation - Reset Client. ${'\r\n'
+              } Client Id: ${newClientDoc.id} ${'\r\n'} Client Name: ${newClientDoc.name}`,
+            200,
             null,
           ),
         );
 
-        // Somehow the resetting failed
-        return res.status(500).send('Internal Server Error');
-      }
-
-      throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
-    }),
-  );
-
-  // Delete client endpoint
-  router.delete(
-    `${config.OAUTH_MANAGEMENT_ENDPOINT}/:clientId`,
-    authenticateManagementMiddleware,
-    Wrapper.wrapAsync(async (req: Request, res: Response) => {
-
-      // If the request contains the client registration token and id
-      if (req.params.clientId) {
-
-        // If the deletion succeed
-        if (await ManagementController.deleteClient(req.params.clientId)) {
-
-          log(
-            LOG_LEVEL.INFO,
-            parseLogData(
-              'Client Management Router',
-              `Received from ${req.headers['x-forwarded-for']}, Operation - Delete client. ${'\r\n'
-               } Client Id: ${req.params.clientId}`,
-              204,
-              null,
-            ),
-          );
-
-          return res.sendStatus(204);
-        }
-
-        log(
-          LOG_LEVEL.ERROR,
-          parseLogData(
-            'Client Management Router',
-            `Unknown Error: Received from ${req.headers['x-forwarded-for']
-             }, Operation - Delete client. ${'\r\n'} Client Id: ${req.params.clientId}`,
-            500,
-            null,
-          ),
-        );
-
-        // Somehow the deletion failed
-        return res.status(500).send('Internal Server Error');
+        return res.status(200).send(newClientDoc);
       }
 
       log(
-        LOG_LEVEL.INFO,
+        LOG_LEVEL.ERROR,
         parseLogData(
           'Client Management Router',
-          `Received from ${req.headers['x-forwarded-for']}, Operation - Delete client. ${'\r\n'
-           }Results: Missing client id`,
-          400,
+          `Unknown Error: Received from ${req.headers['x-forwarded-for']
+            }, Operation - Reset Client. ${'\r\n'
+            } Results: Client id - ${req.params.id} is not reset due unknown error. `,
+          500,
           null,
         ),
       );
 
-      throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
-    },
-  ));
-};
+      // Somehow the resetting failed
+      return res.status(500).send('Internal Server Error');
+    }
+
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
+  }),
+);
+
+// Delete client endpoint
+managementRouter.delete(
+  `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId`,
+  authenticateManagementMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
+
+    // If the request contains the client registration token and id
+    if (req.params.clientId) {
+
+      // If the deletion succeed
+      if (await ManagementController.deleteClient(req.params.clientId)) {
+
+        log(
+          LOG_LEVEL.INFO,
+          parseLogData(
+            'Client Management Router',
+            `Received from ${req.headers['x-forwarded-for']}, Operation - Delete client. ${'\r\n'
+              } Client Id: ${req.params.clientId}`,
+            204,
+            null,
+          ),
+        );
+
+        return res.sendStatus(204);
+      }
+
+      log(
+        LOG_LEVEL.ERROR,
+        parseLogData(
+          'Client Management Router',
+          `Unknown Error: Received from ${req.headers['x-forwarded-for']
+            }, Operation - Delete client. ${'\r\n'} Client Id: ${req.params.clientId}`,
+          500,
+          null,
+        ),
+      );
+
+      // Somehow the deletion failed
+      return res.status(500).send('Internal Server Error');
+    }
+
+    log(
+      LOG_LEVEL.INFO,
+      parseLogData(
+        'Client Management Router',
+        `Received from ${req.headers['x-forwarded-for']}, Operation - Delete client. ${'\r\n'
+          }Results: Missing client id`,
+        400,
+        null,
+      ),
+    );
+
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
+  }),
+);

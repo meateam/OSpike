@@ -95,7 +95,7 @@ export class ClientManagementAuthenticationStrategy
         const clientDoc = await clientModel.findOne({ registrationToken }).lean();
 
         // Check if the registration token is exists and talking about the same client
-        if (clientDoc && clientDoc.id === req.params.clientId) {
+        if (clientDoc && (clientDoc.id === req.params.clientId || clientDoc.id === req.query.clientId)) {
           log(
             LOG_LEVEL.INFO,
             parseLogData(
