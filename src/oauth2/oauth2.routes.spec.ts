@@ -1556,6 +1556,7 @@ describe('OAuth2 Flows Functionality', () => {
           sub: registeredClient2.id,
           scope: [(scopeOfClient1 as IScope).value],
           clientId: registeredClient2._id,
+          clientName: registeredClient2.name,
         }),
         scopes: [(scopeOfClient1 as IScope)._id],
         grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
@@ -1568,6 +1569,7 @@ describe('OAuth2 Flows Functionality', () => {
           sub: registeredClient3.id,
           scope: [(scopeOfClient2 as IScope).value],
           clientId: registeredClient3._id,
+          clientName: registeredClient3.name,
         }),
         scopes: [(scopeOfClient2 as IScope)._id],
         grantType: config.OAUTH_GRANT_TYPES.CLIENT_CREDENTIALS,
@@ -1678,6 +1680,7 @@ describe('OAuth2 Flows Functionality', () => {
         sub: 'unexistSubjectId',
         scope: ['unexistingScope'],
         clientId: 'unexistingClientId',
+        clientName: 'unexistingClientName',
       });
 
       const unexistToken2 = OAuth2Utils.createJWTAccessToken({
@@ -1685,6 +1688,7 @@ describe('OAuth2 Flows Functionality', () => {
         sub: registeredClient.id,
         scope: [(scopeOfClient1 as IScope).value],
         clientId: registeredClient.id,
+        clientName: registeredClient.name,
       });
 
       request(app)

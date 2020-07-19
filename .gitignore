@@ -68,3 +68,5 @@ src/certs/files/
 
 # after commit environments file
 .envs.ac.json
+
+LOGS_DIR_HERE
