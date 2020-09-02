@@ -82,6 +82,13 @@ const config = {
   issuerHostUri: `https://${process.env.HOSTNAME}`,
   jwtAlgorithm: 'RS256',
   jwksPath: join(__dirname, 'certs/files/jwks.json'),
+
+  // DDOS Protection values
+  DDOS_BURST_RATE: 8,
+  DDOS_LIMIT_RATE: 15,
+
+  // Predefined string values
+  DEFAULT_DESCRIPTION: 'No description provided.',
 };
 
 export default config;

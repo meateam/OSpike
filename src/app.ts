@@ -17,6 +17,8 @@ import { errorHandler } from './utils/error.handler';
 import { log, parseLogData, LOG_LEVEL } from './utils/logger';
 import config from './config';
 
+const ddos = require('ddos');
+
 const app = express();
 
 // Morgan formatting types for each environment
@@ -36,6 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan(morganFormatting[process.env.NODE_ENV || 'dev']));
 app.use(helmet());
+app.use(new ddos({ burst: config.DDOS_BURST_RATE, limit: config.DDOS_LIMIT_RATE }).express);
 
 // Use express session support since OAuth2orize requires it
 app.use(session({
