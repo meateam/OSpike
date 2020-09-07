@@ -53,6 +53,7 @@
     "body-parser": "^1.18.3",
     "connect-ensure-login": "^0.1.1",
     "cookie-parser": "^1.4.4",
+    "ddos": "^0.2.1",
     "dotenv": "^6.0.0",
     "ejs": "^2.6.1",
     "elastic-apm-node": "^2.15.0",
