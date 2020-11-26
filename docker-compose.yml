@@ -1,0 +1,25 @@
+version: '2.0'
+services:
+  ospike:
+    container_name: ospike
+    image: spikeproj/ospike:latest
+    ports:
+      - '1338:1338'
+    build: .
+    volumes:
+      - ./logs:/usr/src/app/logs
+    environment:
+      - NODE_ENV=prod
+      - PORT=1338
+      - HOSTNAME=51.144.178.121
+      - MONGO_URL=ds245647.mlab.com:45647/authorization_server_test_new
+      - DB_USERNAME=admin
+      - DB_PASSWORD=Aa123456
+      - HOST_VALIDATION=0
+      - ELASTIC_APM_SERVICE_NAME=
+      - ELASTIC_APM_SERVER_URL=
+      - ELASTIC_APM_SECRET_TOKEN=
+      - LOG_DIR=LOGS_DIR_HERE
+      - LOG_FILE_NAME=LOGS_FILE_NAME_HERE
+      - SHRAGA_URL=http://13.79.7.3
+    restart: always
