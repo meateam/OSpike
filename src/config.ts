@@ -27,7 +27,7 @@ const config = {
   CLIENT_MANAGER_PASSPORT_MANAGEMENT_STRATEGY: 'client_manager_management_strategy',
 
   // OSpike Audience (For the client manager operations)
-  SPIKE_AUDIENCE: process.env.SPIKE_AUDIENCE,
+  OSPIKE_AUDIENCE: process.env.OSPIKE_AUDIENCE,
 
   // OAuth2 Grant Types
   OAUTH_GRANT_TYPES: {
