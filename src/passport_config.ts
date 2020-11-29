@@ -20,7 +20,7 @@ import { ipInHostnames } from './utils/hostnameUtils';
  */
 passport.use(new shragaStrategy(
   {
-    callbackURL: `${config.AUTH_ENDPOINT}${config.AUTH_SHRAGA_CALLBACK_ENDPOINT}`,
+    callbackURL: `${config.SHRAGA_REDIRECT_HOSTNAME}${config.AUTH_ENDPOINT}${config.AUTH_SHRAGA_CALLBACK_ENDPOINT}`,
     shragaURL: process.env.SHRAGA_URL,
   },
   (profile: any, done: any) => {

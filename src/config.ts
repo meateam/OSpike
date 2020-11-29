@@ -26,6 +26,9 @@ const config = {
   CLIENT_MANAGER_PASSPORT_STRATEGY: 'client_manager_strategy', // Only client manager authentication
   CLIENT_MANAGER_PASSPORT_MANAGEMENT_STRATEGY: 'client_manager_management_strategy',
 
+  // OSpike Audience (For the client manager operations)
+  SPIKE_AUDIENCE: process.env.SPIKE_AUDIENCE,
+
   // OAuth2 Grant Types
   OAUTH_GRANT_TYPES: {
     AUTHORIZATION_CODE: 'code',
@@ -65,6 +68,9 @@ const config = {
   get SHRAGA_CALLBACK_ENDPOINT() {
     return `${this.OAUTH_ENDPOINT + this.OAUTH_AUTHORIZATION_ENDPOINT}`;
   },
+
+  // Shraga Callback Hostname
+  SHRAGA_REDIRECT_HOSTNAME: process.env.HOSTNAME,
 
   // Session
   SESSION_SECRET: 'bla_bla_secret_session_dont_tell_anyone',
