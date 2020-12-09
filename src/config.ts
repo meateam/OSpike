@@ -85,7 +85,7 @@ const config = {
   certificatePath: join(__dirname, 'certs/files/certificate.pem'),
 
   // JWT Configuration
-  issuerHostUri: `https://${process.env.HOSTNAME}`,
+  issuerHostUri: `https://${process.env.ISSUER_HOSTNAME}`,
   jwtAlgorithm: 'RS256',
   jwksPath: join(__dirname, 'certs/files/jwks.json'),
 
