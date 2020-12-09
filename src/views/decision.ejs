@@ -16,30 +16,32 @@
 </head>
 
 <body>
-
-  <div class='card-container'>
-    <form action="/oauth2/decision" method="post">
-      <input name="transaction_id" type="hidden" value="<%= transactionID %>">
-      <fieldset>
-        <div class="card-wide mdl-card mdl-shadow--2dp">
-          <div class="mdl-card__title">
-            <h2 class="mdl-card__title-text">Hi <%- typeof(user.name) === 'object' ? user.name.firstName + ' ' + user.name.lastName : user.name %>,</h2>
-          </div>
-          <div class="mdl-card__supporting-text">
-            <h6>
-              The application <b><%= client.name %></b> wants the following permissions from
-              your account to use the application <b><%= audience %></b>:
-              <ul class="mdl-list">
-                <% for (let index = 0; index < scopes.length; index++) { %>
-                <li class="mdl-list__item">
-                  <span class="mdl-list__item-primary-content">
-                    <i class="material-icons mdl-list__item-icon">done_outline</i>
-                    <%= scopes[index].description %>
-                  </span>
-                </li>
-                <% } %>
-              </ul>
-              <!-- <ul class="mdl-list">
+    <div class='card-container'>
+      <form action="/oauth2/decision" method="post">
+        <input name="transaction_id" type="hidden" value="<%= transactionID %>">
+        <fieldset>
+          <div class="card-wide mdl-card mdl-shadow--4dp">
+            <div class="mdl-card__title">
+              <h2 class="mdl-card__title-text">היי <%- typeof(user.name) === 'object' ? user.name.firstName + ' ' + user.name.lastName : user.name %>,</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+              <h6>
+                ,'<b><%= client.name %></b>' הינך מאפשר/ת למערכת
+                <br>
+                :'<b><%= audience %></b>' לבצע את הפעולות הבאות בחשבונך במערכת
+                <!-- The application <b><%= client.name %></b> wants the following permissions from
+              your account to use the application <b><%= audience %></b>: -->
+                <ul class="mdl-list">
+                  <% for (let index = 0; index < scopes.length; index++) { %>
+                  <li class="mdl-list__item scope_text">
+                    <span class="mdl-list__item-primary-content">
+                      <i class="material-icons mdl-list__item-icon">done_outline</i>
+                      <%= scopes[index].description %>
+                    </span>
+                  </li>
+                  <% } %>
+                </ul>
+                <!-- <ul class="mdl-list">
                 <li class="mdl-list__item">
                   <span class="mdl-list__item-primary-content">
                     <i class="material-icons mdl-list__item-icon">done_outline</i>
@@ -59,31 +61,31 @@
                   </span>
                 </li>
               </ul> -->
-              Do you approve?
-            </h6>
-            <p class='text-help'>
-              Don't understand what is going on? pay a visit in <a href='' target="_blank">here</a>.
-            </p>
-          </div>
-          <div class="mdl-card__actions mdl-card--border centered">
-            <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" type="submit"
-              value="Accept" id="allow">
-              Approve
-            </button>
-            <!-- Cheat to make a bit of spacing -->
-            <span>&nbsp&nbsp</span>
-            <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" type="submit" value="Deny"
-              name="cancel" id="deny">
-              Deny
-            </button>
-          </div>
-          <div class="mdl-card__menu">
-            <div class="spike-logo">
+                <!-- האם את/ה מאשר/ת? -->
+              </h6>
+              <!-- <p class='text-help'>
+              לא מבינ/ה מה קורה כאן? בקר/י <a href='' target="_blank">פה</a>.
+            </p> -->
+            </div>
+            <div class="mdl-card__actions mdl-card--border centered">
+              <button class="mdl-button mdl-js-button mdl-button--primary button_text" type="submit" value="Accept"
+                id="allow">
+                <b>אישור</b>
+              </button>
+              <!-- Cheat to make a bit of spacing -->
+              <span>&nbsp&nbsp</span>
+              <button class="mdl-button mdl-js-button mdl-button--accent button_text" type="submit" value="Deny"
+                name="cancel" id="deny">
+                <b>ביטול</b>
+              </button>
+            </div>
+            <div class="mdl-card__menu">
+              <div class="spike-logo">
+              </div>
             </div>
           </div>
-        </div>
-      </fieldset>
-    </form>
+        </fieldset>
+      </form>
   </div>
 </body>
 
