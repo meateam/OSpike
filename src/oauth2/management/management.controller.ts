@@ -15,13 +15,16 @@ import clientModel from '../../client/client.model';
 import accessTokenModel from '../../accessToken/accessToken.model';
 import authCodeModel from '../../authCode/authCode.model';
 import { ClientNotFound, BadClientInformation } from './management.error';
+import {
+  collectionName as accessTokenCollectionName,
+} from '../../accessToken/accessToken.interface';
 
 // TODO: Add error handling
 // TODO: aggregate mongoose model properties
 
 export class ManagementController {
 
-  public static readonly ERROR_MESSAGES: { [error: string]: string} = {
+  public static readonly ERROR_MESSAGES: { [error: string]: string } = {
     MISSING_CLIENT_PROP: `Invalid client information given, format:
     { name: XXX, hostUris: [https://XXX], redirectUris: [/YYY]}`,
     INVALID_CLIENT_UPDATE_PARAMS: `Invalid client update information given, format:
@@ -73,6 +76,50 @@ export class ManagementController {
     }
 
     throw new ClientNotFound('Invalid client id or client registration token given');
+  }
+
+  /**
+   * Gets client's active tokens count from authorization server
+   * @param clientId - Client identifier given by authorization server
+   */
+  static async getClientActiveTokens(clientId: string) {
+    const activeTokensList =
+      await clientModel.aggregate(
+        [
+          {
+            $match: {
+              id: clientId,
+            },
+          },
+          {
+            $lookup: {
+              from: `${accessTokenCollectionName.toLowerCase()}s`,
+              localField: '_id',
+              foreignField: 'clientId',
+              as: 'access_tokens',
+            },
+          },
+          {
+            $unwind: {
+              path: '$access_tokens',
+            },
+          },
+          {
+            $group: {
+              _id: '$access_tokens.audience',
+              count: {
+                $sum: 1.0,
+              },
+            },
+          },
+        ],
+      );
+
+    if (activeTokensList) {
+      return activeTokensList;
+    }
+
+    return [];
   }
 
   /**

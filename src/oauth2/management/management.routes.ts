@@ -126,6 +126,47 @@ managementRouter.get(
   },
 ));
 
+// Get client's active tokens count list endpoint
+managementRouter.get(
+  `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId/tokens`,
+  authenticateManagementMiddleware,
+  Wrapper.wrapAsync(async (req: Request, res: Response) => {
+
+    if (req.params.clientId) {
+      const activeTokensList =
+        await ManagementController.getClientActiveTokens(req.params.clientId);
+
+      log(
+        LOG_LEVEL.INFO,
+        parseLogData(
+          'Client Management Router',
+          `Received from ${req.headers['x-forwarded-for']},
+          Operation - Get active access tokens. ${'\r\n'
+          } Client Id: ${req.params.clientId}`,
+          200,
+          null,
+        ),
+      );
+
+      return res.status(200).send(activeTokensList);
+    }
+
+    log(
+      LOG_LEVEL.INFO,
+      parseLogData(
+        'Client Management Router',
+        `Received from ${req.headers['x-forwarded-for']},
+        Operation - Get active access tokens.${'\r\n'
+        }Results: Missing client id`,
+        400,
+        null,
+      ),
+    );
+
+    throw new InvalidParameter(errorMessages.MISSING_CLIENT_ID);
+  }),
+);
+
 // Update client information endpoint
 managementRouter.put(
   `${config.OAUTH_MANAGEMENT_CLIENT_ENDPOINT}/:clientId`,

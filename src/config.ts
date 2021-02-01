@@ -77,7 +77,7 @@ const config = {
 
   // MongoDB Url
   mongoUrl:
-    `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.MONGO_URL}`,
+    `mongodb${process.env.MONGO_SRV || ''}://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.MONGO_URL}`,
 
   // SSL Configuration
   privateKeyPath: join(__dirname, 'certs/files/privatekey.pem'),
