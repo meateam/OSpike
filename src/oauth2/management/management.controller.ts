@@ -94,9 +94,20 @@ export class ManagementController {
           {
             $lookup: {
               from: `${accessTokenCollectionName.toLowerCase()}s`,
-              localField: '_id',
-              foreignField: 'clientId',
-              as: 'access_tokens',
+              let: { id: "$_id" },
+              pipeline: [ 
+                {  
+                  $match: {
+                    $expr: { 
+                      $and: [
+                        { $eq: ["$grantType", "client_credentials"] },
+                        { $eq: ["$$id", "$clientId"] }
+                      ],
+                    },
+                  },
+                },
+             ],
+             as: "access_tokens",
             },
           },
           {
