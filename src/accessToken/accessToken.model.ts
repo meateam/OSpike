@@ -12,7 +12,7 @@ import { scopeRefValidator } from '../scope/scope.validator';
 const accessTokenSchema = new Schema(
   {
     clientId: {
-      type: String,
+      type: Schema.Types.ObjectId,
       ref: ClientModelName,
       required: true,
       validate: clientRefValidator as any,
