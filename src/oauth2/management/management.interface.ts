@@ -8,6 +8,7 @@ export interface IClientBasicInformation {
   name: IClient['name'];
   redirectUris: IClient['redirectUris'];
   hostUris: IClient['hostUris'];
+  description?: IClient['description'];
 }
 
 export const numIClientBasicInformationLength = 4;
@@ -16,10 +17,32 @@ export const numIClientBasicInformationLength = 4;
 export const isIClientBasicInformation = (obj: any): obj is IClientBasicInformation => {
   return (
     obj &&
-    obj[propertyOf<IClientBasicInformation>('name')] &&
-    obj[propertyOf<IClientBasicInformation>('redirectUris')] &&
-    obj[propertyOf<IClientBasicInformation>('hostUris')] &&
-    Object.keys(obj).length === numIClientBasicInformationLength - 1
+    (
+      obj[propertyOf<IClientBasicInformation>('name')] &&
+      typeof obj[propertyOf<IClientBasicInformation>('name')] === 'string'
+    ) &&
+    (
+      obj[propertyOf<IClientBasicInformation>('redirectUris')] &&
+      Array.isArray(obj[propertyOf<IClientBasicInformation>('redirectUris')]) &&
+      obj[propertyOf<IClientBasicInformation>('redirectUris')].length > 0 &&
+      typeof obj[propertyOf<IClientBasicInformation>('redirectUris')][0] === 'string'
+    ) &&
+    (
+      obj[propertyOf<IClientBasicInformation>('hostUris')] &&
+      Array.isArray(obj[propertyOf<IClientBasicInformation>('hostUris')]) &&
+      obj[propertyOf<IClientBasicInformation>('hostUris')].length > 0 &&
+      typeof obj[propertyOf<IClientBasicInformation>('hostUris')][0] === 'string'
+    ) &&
+    (
+      (
+        obj[propertyOf<IClientBasicInformation>('description')] &&
+        typeof obj[propertyOf<IClientBasicInformation>('description')] === 'string' &&
+        Object.keys(obj).length === numIClientBasicInformationLength    
+      ) ||
+      (
+        Object.keys(obj).length === numIClientBasicInformationLength - 1
+      )
+    )
     // Uncomment this when scopes feature ready
     // obj[propertyOf<IClientBasicInformation>('scopes')] &&
     // Object.keys(obj).length === numIClientBasicInformationLength
