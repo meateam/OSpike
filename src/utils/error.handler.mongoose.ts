@@ -5,9 +5,14 @@ import { MongoError } from 'mongodb';
 
 export class MongooseErrorHandler {
 
+  private static readonly REGEX_UNIQUE_KEY = /E11000\sduplicate\skey\serror\scollection\:.+(clients|accesstokens|refreshtokens|authcodes|users).+key.+\{(.+)\}/;
   private static readonly DUP_KEY_SEP = 'dup key: { :';
   private static readonly DUP_KEY_TEMPLATE_MESSAGE =
-    `Duplicate value given: There's already {prop} - {value} for {collection}`;
+    `There's already {%VALUE%} for {%COLLECTION%}`;
+  private static readonly DUP_KEY_TEMPLATE_MESSAGE_SHORT =
+    `There's already {%VALUE%}`;
+  private static readonly DUP_KEY_TEMPLATE_MESSAGE_TINY =
+    `Duplicate value given.`;
   private static readonly COLLECTION_NAMES = [
     'clients', 'accesstokens', 'refreshtokens', 'authcodes', 'users',
   ];
@@ -46,7 +51,7 @@ export class MongooseErrorHandler {
         if ((<any>error).code === 11000 || (<any>error).code === 11001) {
           return {
             status: 400,
-            message: MongooseErrorHandler.parseDuplicateKeyMessage(error.message),
+            message: MongooseErrorHandler.parseDuplicateKeyMessage(error.message, (<any>error).keyValue),
           };
         }
 
@@ -60,40 +65,50 @@ export class MongooseErrorHandler {
 
   }
 
-  private static parseDuplicateKeyMessage(message: string) {
-    let index = 0;
-    let collectionIndex = -1;
-    const dupKeySepIndex = message.indexOf(MongooseErrorHandler.DUP_KEY_SEP);
+  private static parseDuplicateKeyMessage(message: string, keyValue: any) {
 
-    // Finding the collection that related to the error
-    for (index = 0;
-      collectionIndex === -1 && index < MongooseErrorHandler.COLLECTION_NAMES.length;
-      index += 1) {
-      collectionIndex = message.indexOf(MongooseErrorHandler.COLLECTION_NAMES[index]);
+    // Extract the property, name and collection of the unique index violation
+    const regexMatches = message.match(MongooseErrorHandler.REGEX_UNIQUE_KEY);
+
+    // All the values extracted successfully from the regex
+    if (regexMatches && regexMatches.length === 3) {
+      const collectionIndex = MongooseErrorHandler.COLLECTION_NAMES.indexOf(regexMatches[1]);
+      const dupValue = regexMatches[2];
+      let collectionView =
+        collectionIndex !== -1 ?
+          MongooseErrorHandler.COLLECTION_NAMES_VIEW[collectionIndex]
+          :
+          null;
+
+
+      if (dupValue && collectionView) {
+        return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE
+          .replace(`{%VALUE%}`, dupValue)
+          .replace(`{%COLLECTION%}`, collectionView);
+      }
+
+      if (dupValue) {
+        return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE_SHORT
+          .replace(`{%VALUE%}`, dupValue);
+      }
     }
 
-    // If not succeed in parsing the message, just return it
-    if (collectionIndex === -1 && index === MongooseErrorHandler.COLLECTION_NAMES.length) {
-      return message;
+    // Unique index was not found in the error
+    if (!keyValue) {
+      return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE_TINY;
     }
 
-    // Should lower the index by one cause of the increment by the for loop
-    index -= 1;
+    const propKeys = Object.keys(keyValue);
 
-    // Extracting the property and value caused the error
-    const prop = message.substring(
-      collectionIndex + MongooseErrorHandler.COLLECTION_NAMES[index].length + 2,
-      dupKeySepIndex - 3,
-    );
+    // Unique index values not found in the error
+    if (propKeys.length === 0) {
+      return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE_TINY;
+    }
 
-    const value = message.substring(
-      dupKeySepIndex + MongooseErrorHandler.DUP_KEY_SEP.length + 1,
-      message.length - 2,
-    );
+    const prop = propKeys[0];
+    const value = keyValue[propKeys[0]];
 
-    return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE
-      .replace('{collection}', MongooseErrorHandler.COLLECTION_NAMES_VIEW[index])
-      .replace('{prop}', prop)
-      .replace('{value}', value);
+    return MongooseErrorHandler.DUP_KEY_TEMPLATE_MESSAGE_SHORT
+      .replace('{%VALUE%}', `${prop}: ${value}`);
   }
 }
