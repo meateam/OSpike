@@ -1,6 +1,9 @@
 import * as winston from 'winston';
 const winstonRotateFile = require('winston-daily-rotate-file');
+import { ElasticsearchTransport } from 'winston-elasticsearch';
+import { Client } from '@elastic/elasticsearch';
 
+const client = new Client({ node: process.env.ELASTICSEARCH_URL || 'http://localhost' });
 const serviceName = 'OSpike';
 const hostname = 'HOSTNAME';
 
@@ -14,8 +17,19 @@ export enum LOG_LEVEL {
   SILLY = 'silly',
 }
 
+const esTransportOpts = {
+  level: 'info',
+  index: 'ospike',
+  client: client
+};
+
+const esTransport = new ElasticsearchTransport(esTransportOpts);
+
 const logger = winston.createLogger({
   defaultMeta: { hostname, service: serviceName },
+  transports: [
+    esTransport
+  ]
 });
 
 const format = winston.format.combine(
