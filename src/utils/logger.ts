@@ -26,7 +26,7 @@ const esTransportOpts = {
 const esTransport = new ElasticsearchTransport(esTransportOpts);
 
 const logger = winston.createLogger({
-  defaultMeta: { hostname, service: serviceName },
+  defaultMeta: { service: serviceName },
   transports: [
     esTransport
   ]
@@ -56,13 +56,13 @@ export const log = (severity: string, meta: any) => {
 export const parseLogData = (name?: string | null,
                              message?: string | null,
                              code?: string | number | null,
-                             stack?: string | null) => {
+                             stack?: string | null, clientId?: string | null) => {
   return {
-    hostname,
     name: name || 'No name provided',
     message: message || 'No message provided',
     code: String(code || 'No code provided'),
     stack: stack || 'No stack trace provided',
     service: serviceName,
+    clientId: clientId || 'No ClientId provided'
   };
 };
