@@ -7,7 +7,30 @@ import { LOG_LEVEL, log, parseLogData } from './logger';
 
 // TODO: Error type correction
 export function errorHandler(error: any, req: Request, res: Response, next: NextFunction) {
+  let clientId;
 
+  if (req.body && req.body.clientId) {
+    clientId = req.body.clientId;
+  } else if (req.query && req.query.client_id) {
+    clientId = req.query.client_id;
+  } else if (req.headers['authorization']) {
+    try {
+      let decode = req.headers['authorization'];
+
+      if (decode && decode.indexOf('Basic') !== -1) {
+          decode = decode.replace('Basic ', '');
+      }
+
+      decode = Buffer.from(decode as any, 'base64').toString();
+
+      if (decode && decode.indexOf(':') !== -1) {
+        clientId = decode.split(':')[0];
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  
   // Authentication error caused by passport strategy
   if (error.name === 'AuthenticationError') {
     log(
@@ -20,6 +43,7 @@ export function errorHandler(error: any, req: Request, res: Response, next: Next
                error.name + ': ' + error.message || 'Unknown error'}`,
         error.status,
         error.stack,
+        clientId
       ),
     );
     return res.status(error.status).send({
@@ -35,6 +59,7 @@ export function errorHandler(error: any, req: Request, res: Response, next: Next
         `Received From: ${req.headers['x-forwarded-for']}, message: ${error.message}`,
         error.status,
         error.stack,
+        clientId
       ),
     );
     return res.status(error.status).send({ message: error.message });
@@ -51,6 +76,7 @@ export function errorHandler(error: any, req: Request, res: Response, next: Next
          }, message: ${errorDetails.message || error.message || error}`,
         errorDetails.status.toString(),
         error.stack,
+        clientId
       ),
     );
 
@@ -64,6 +90,7 @@ export function errorHandler(error: any, req: Request, res: Response, next: Next
       `Received From: ${req.headers['x-forwarded-for']}, message: ${error.message || error}`,
       error.status || 500,
       error.stack,
+      clientId
     ),
   );
 

@@ -79,13 +79,21 @@ export class ScopeManagementController {
    * @param scopeInformation - the scope update information
    */
   static async updateScope(audienceId: string, value: string, scopeInformation: IScopeUpdateInformation) {
+
     if (isIScopeUpdateInformation(scopeInformation)) {
-      // Currently setting only the permitted clients
+
+      // Currently setting only the permitted clients and description (if passed)
       const currentScope = await scopeModel.updateOne(
         { audienceId, value },
-        { $set: { permittedClients: [...new Set(scopeInformation.permittedClients as string[])] } },
-        { new: true }
+        {
+          $set: {
+            permittedClients: [...new Set(scopeInformation.permittedClients as string[])],
+            ...(scopeInformation.description ? { description: scopeInformation.description } : {}),
+          },
+        },
+        { new: true },
       );
+
       return currentScope;
     }
 

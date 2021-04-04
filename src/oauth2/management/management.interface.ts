@@ -55,6 +55,7 @@ export const isPartialIClientBasicInformation =
       propertyOf<IClientBasicInformation>('name'),
       propertyOf<IClientBasicInformation>('redirectUris'),
       propertyOf<IClientBasicInformation>('hostUris'),
+      propertyOf<IClientBasicInformation>('description'),
       // Uncomment this when scopes feature ready
       // propertyOf<IClientBasicInformation>('scopes'),
     ];

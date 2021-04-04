@@ -51,11 +51,12 @@
     "nodemon": "./node_modules/.bin/nodemon"
   },
   "dependencies": {
+    "@elastic/elasticsearch": "^7.11.0",
     "body-parser": "^1.18.3",
     "connect-ensure-login": "^0.1.1",
     "cookie-parser": "^1.4.4",
-    "dotenv": "^6.0.0",
     "ddos": "^0.2.1",
+    "dotenv": "^6.0.0",
     "ejs": "^2.6.1",
     "elastic-apm-node": "^2.15.0",
     "express": "^4.16.3",
@@ -74,7 +75,8 @@
     "passport-shraga": "^1.4.0",
     "passport-strategy": "^1.0.0",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.10.0"
+    "winston-daily-rotate-file": "^3.10.0",
+    "winston-elasticsearch": "^0.15.3"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^5.0.1",
