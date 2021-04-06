@@ -63,40 +63,45 @@ accessTokenSchema.pre<IAccessToken>(
     if (this.userId) {
       next(error);
     } else { // Otherwise, token should have limitation
-      const foundTokens = await accessTokenModel.find({
-        clientId: this.clientId,
-        userId: { $exists: false } ,
-        audience: this.audience,
-      });
 
-      let currentActiveTokensCount = foundTokens.length;
-
-      for (const currToken of foundTokens) {
-
-        // Checking if the access token is invalid by expiration time,
-        // or if theres any other access token with the same value of the currently
-        // created access token.
-        // Access tokens can have same value only if the requests for the access token
-        // performed almost in the same time, in matter of milliseconds.
-        // (Because the value of the 'exp' and 'iat' value in the JWT is in seconds)
-        // If we allow access token to be saved with the same value, it will violate
-        // the unique index on the 'value' key.
-
-        if ((currToken.expireAt.getTime() +
-            config.ACCESS_TOKEN_EXPIRATION_TIME * 1000 <= Date.now()) ||
-            (currToken.value === this.value)) {
-          await currToken.remove();
-          currentActiveTokensCount -= 1;
+      // Checking if the client is not in the whitelist (Need to check if it violate the limitation)
+      if (config.ACCESS_TOKEN_LIMIT_WHITELIST.indexOf((this.clientId as string).toString()) === -1) {
+        const foundTokens = await accessTokenModel.find({
+          clientId: this.clientId,
+          userId: { $exists: false } ,
+          audience: this.audience,
+        });
+  
+        let currentActiveTokensCount = foundTokens.length;
+  
+        for (const currToken of foundTokens) {
+  
+          // Checking if the access token is invalid by expiration time,
+          // or if theres any other access token with the same value of the currently
+          // created access token.
+          // Access tokens can have same value only if the requests for the access token
+          // performed almost in the same time, in matter of milliseconds.
+          // (Because the value of the 'exp' and 'iat' value in the JWT is in seconds)
+          // If we allow access token to be saved with the same value, it will violate
+          // the unique index on the 'value' key.
+  
+          if ((currToken.expireAt.getTime() +
+              config.ACCESS_TOKEN_EXPIRATION_TIME * 1000 <= Date.now()) ||
+              (currToken.value === this.value)) {
+            await currToken.remove();
+            currentActiveTokensCount -= 1;
+          }
+        }
+  
+        if (currentActiveTokensCount >= config.ACCESS_TOKEN_COUNT_LIMIT) {
+  
+          // Creating this error as MongoError for easy control via mongoose error handler
+          error = new AccessTokenLimitExceeded(
+            errorMessages.LIMIT_VIOLATION_ACCESS_TOKEN_WITHOUT_USER,
+          );
         }
       }
-
-      if (currentActiveTokensCount >= config.ACCESS_TOKEN_COUNT_LIMIT) {
-
-        // Creating this error as MongoError for easy control via mongoose error handler
-        error = new AccessTokenLimitExceeded(
-          errorMessages.LIMIT_VIOLATION_ACCESS_TOKEN_WITHOUT_USER,
-        );
-      }
+      
 
       next(error);
     }

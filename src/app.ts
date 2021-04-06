@@ -24,6 +24,26 @@ const app = express();
 // Morgan formatting types for each environment
 const morganFormatting: any = { prod: 'common', dev: 'dev', test: 'tiny' };
 
+morgan.token('remote-user', (req, res) => {
+  if (req.headers['authorization']) {
+    const encodedCredentials = (req.headers['authorization'] as string).split('Basic');
+
+    if (encodedCredentials.length === 0 || encodedCredentials.length < 2) {
+      return null;
+    }
+
+    const credentials = (Buffer.from(encodedCredentials[1], 'base64').toString()).split(':');
+
+    if (credentials.length >= 1) {
+      return credentials[0];
+    }
+  }
+
+  if (req.body) {
+    return req.body.client_id;
+  }
+});
+
 // Set ejs as view engine for server side rendering
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/views'));
@@ -38,7 +58,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan(morganFormatting[process.env.NODE_ENV || 'dev']));
 app.use(helmet());
-app.use(new ddos({ burst: config.DDOS_BURST_RATE, limit: config.DDOS_LIMIT_RATE }).express);
+
+// Set up DDOS protection only if enabled
+if (config.DDOS_ENABLED) {
+  app.use(
+    new ddos(
+      { 
+        burst: config.DDOS_BURST_RATE,
+        limit: config.DDOS_LIMIT_RATE,
+        ...(config.DDOS_WHITELIST ? { whitelist: config.DDOS_WHITELIST } : {}),
+      },
+    ).express
+  );
+}
 
 // Use express session support since OAuth2orize requires it
 app.use(session({
