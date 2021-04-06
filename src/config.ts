@@ -4,12 +4,35 @@ import { join } from 'path';
 
 const config = {
   // Expiration Times - format in seconds for mongoose TTL expiration field
-  AUTH_CODE_EXPIRATION_TIME: 120, // 2 Minutes
-  ACCESS_TOKEN_EXPIRATION_TIME: 180, // 3 Minutes
-  REFRESH_TOKEN_EXPIRATION_TIME: 180, // 3 Minutes
+  AUTH_CODE_EXPIRATION_TIME: 
+    process.env.AUTH_CODE_EXPIRATION_TIME && !isNaN(parseInt(process.env.AUTH_CODE_EXPIRATION_TIME, 10)) ?
+    parseInt(process.env.AUTH_CODE_EXPIRATION_TIME, 10)
+    :
+    120, // 2 Minutes
+  ACCESS_TOKEN_EXPIRATION_TIME: 
+    process.env.ACCESS_TOKEN_EXPIRATION_TIME && !isNaN(parseInt(process.env.ACCESS_TOKEN_EXPIRATION_TIME, 10)) ?
+    parseInt(process.env.ACCESS_TOKEN_EXPIRATION_TIME, 10)
+    :
+    180, // 3 Minutes
+  REFRESH_TOKEN_EXPIRATION_TIME: 
+    process.env.REFRESH_TOKEN_EXPIRATION_TIME && !isNaN(parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME, 10)) ?
+    parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME, 10)
+    :
+    180, // 3 Minutes
 
   // Access Token Count Limit - Number of tokens limitation
-  ACCESS_TOKEN_COUNT_LIMIT: 10,
+  ACCESS_TOKEN_COUNT_LIMIT: 
+    process.env.ACCESS_TOKEN_COUNT_LIMIT && !isNaN(parseInt(process.env.ACCESS_TOKEN_COUNT_LIMIT, 10)) ?
+    parseInt(process.env.ACCESS_TOKEN_COUNT_LIMIT, 10)
+    :
+    10,
+
+  // Access Token Limitation Whitelist
+  ACCESS_TOKEN_LIMIT_WHITELIST: 
+    process.env.ACCESS_TOKEN_LIMIT_WHITELIST && process.env.ACCESS_TOKEN_LIMIT_WHITELIST.split(',').length > 0 ?
+    process.env.ACCESS_TOKEN_LIMIT_WHITELIST.split(',')
+    :
+    [],
 
   // Lengths
   AUTH_CODE_LENGTH: 50,
@@ -70,7 +93,7 @@ const config = {
   },
 
   // Shraga Callback Hostname
-  SHRAGA_REDIRECT_HOSTNAME: process.env.HOSTNAME,
+  SHRAGA_REDIRECT_HOSTNAME: `https://${process.env.HOSTNAME}`,
 
   // Session
   SESSION_SECRET: 'bla_bla_secret_session_dont_tell_anyone',
@@ -90,8 +113,14 @@ const config = {
   jwksPath: join(__dirname, 'certs/files/jwks.json'),
 
   // DDOS Protection values
-  DDOS_BURST_RATE: 8,
-  DDOS_LIMIT_RATE: 15,
+  DDOS_ENABLED: process.env.DDOS_ENABLED || true,
+  DDOS_BURST_RATE: process.env.DDOS_BURST_RATE || 8,
+  DDOS_LIMIT_RATE: process.env.DDOS_LIMIT_RATE || 15,
+  DDOS_WHITELIST: 
+    process.env.DDOS_WHITELIST && process.env.DDOS_WHITELIST.split(',').length > 0 ?
+    process.env.DDOS_WHITELIST.split(',')
+    :
+    null,
 
   // Predefined string values
   DEFAULT_DESCRIPTION: 'No description provided.',
