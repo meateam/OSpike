@@ -1,5 +1,6 @@
 import * as winston from 'winston';
 const winstonRotateFile = require('winston-daily-rotate-file');
+const LogstashTransport = require('winston-logstash-transport').LogstashTransport;
 import { ElasticsearchTransport } from 'winston-elasticsearch';
 import { Client } from '@elastic/elasticsearch';
 
@@ -23,13 +24,22 @@ const esTransportOpts = {
   client: client
 };
 
+const logstashActive = process.env.LOGSTASH_ACTIVE || false;
+
+const logstashTransport = new LogstashTransport({
+  host: process.env.LOGSTASH_HOST || 'http://localhost',
+  port: parseInt(process.env.LOGSTASH_PORT || '12345')
+});
+
 const esTransport = new ElasticsearchTransport(esTransportOpts);
+
+const transports = [esTransport];
+
+logstashActive === 'true' ? transports.push(logstashTransport) : null;
 
 const logger = winston.createLogger({
   defaultMeta: { service: serviceName },
-  transports: [
-    esTransport
-  ]
+  transports,
 });
 
 const format = winston.format.combine(

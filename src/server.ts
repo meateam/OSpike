@@ -5,7 +5,7 @@ require('elastic-apm-node').start({
   serviceName: process.env.ELASTIC_APM_SERVICE_NAME,
   serverUrl: process.env.ELASTIC_APM_SERVER_URL,
   secretToken: process.env.ELASTIC_APM_SECRET_TOKEN || '',
-  active: process.env.ELASTIC_APM_ACTIVE || false,
+  active: process.env.ELASTIC_APM_ACTIVE === 'true' || false,
 });
 
 import * as https from 'https';

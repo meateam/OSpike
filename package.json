@@ -76,7 +76,8 @@
     "passport-strategy": "^1.0.0",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^3.10.0",
-    "winston-elasticsearch": "^0.15.3"
+    "winston-elasticsearch": "^0.15.3",
+    "winston-logstash-transport": "^2.0.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^5.0.1",
