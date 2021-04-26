@@ -71,7 +71,7 @@ export class ClientManagementAuthenticationStrategy
     // have been done from the correct host
     if (accessTokenDoc &&
         // accessTokenDoc.scopes.indexOf(config.CLIENT_MANAGER_SCOPE) > -1) {
-        accessTokenDoc.audienceId === config.OSPIKE_AUDIENCE &&
+        accessTokenDoc.audience === config.OSPIKE_AUDIENCE &&
         ScopeUtils.transformScopeModelsToRawScopes(accessTokenDoc.scopes)
                   .indexOf(config.CLIENT_MANAGER_SCOPE) > -1) {
 
