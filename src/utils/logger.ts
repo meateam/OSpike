@@ -40,6 +40,7 @@ logstashActive === 'true' ? transports.push(logstashTransport) : null;
 const logger = winston.createLogger({
   defaultMeta: { service: serviceName },
   transports,
+  exitOnError: false,
 });
 
 const format = winston.format.combine(

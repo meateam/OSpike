@@ -113,7 +113,7 @@ const config = {
   jwksPath: join(__dirname, 'certs/files/jwks.json'),
 
   // DDOS Protection values
-  DDOS_ENABLED: process.env.DDOS_ENABLED || true,
+  DDOS_ENABLED: process.env.DDOS_ENABLED === 'true' || false,
   DDOS_BURST_RATE: process.env.DDOS_BURST_RATE || 8,
   DDOS_LIMIT_RATE: process.env.DDOS_LIMIT_RATE || 15,
   DDOS_WHITELIST: 
