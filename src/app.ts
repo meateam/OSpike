@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import path from 'path';
 import './passport_config'; // Setting up all passport middlewares
 import './db_config'; // Create mongodb connections
+import { default as redis } from 'redis';
 import { default as session } from 'express-session';
 import { default as oauthRouter } from './oauth2/oauth2.routes';
 import { default as authRouter } from './auth/auth.routes';
@@ -18,6 +19,7 @@ import { log, parseLogData, LOG_LEVEL } from './utils/logger';
 import config from './config';
 
 const ddos = require('ddos');
+const redisConnector = require('connect-redis');
 
 const app = express();
 
@@ -72,8 +74,32 @@ if (config.DDOS_ENABLED) {
   );
 }
 
-// Use express session support since OAuth2orize requires it
+// Create redis store instance if possible, for managing session store in redis.
+let redisStoreInstance = null;
+
+if (config.SESSION_REDIS_HOST && config.SESSION_REDIS_PORT && config.SESSION_REDIS_PASSWORD) {
+  const redisClient = redis.createClient({
+    host: config.SESSION_REDIS_HOST,
+    port: config.SESSION_REDIS_PORT,
+    password: config.SESSION_REDIS_PASSWORD,
+    retry_strategy: (options) => {
+      if (options.total_retry_time > 1000 * 60 * 60) {
+        return 5000;
+      }
+
+      return Math.min(options.attempt * 100, 3000);
+    }
+  });
+
+  const RedisStore = redisConnector(session);
+
+  redisStoreInstance = new RedisStore({ client: redisClient });
+}
+
+// Use express session support since OAuth2orize requires it.
+// Also, connect redis store to enable multi-instance support.
 app.use(session({
+  ...(redisStoreInstance ? { store: redisStoreInstance } : {}),
   secret: config.SESSION_SECRET,
   saveUninitialized: true,
   resave: true,

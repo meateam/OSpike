@@ -98,6 +98,15 @@ const config = {
   // Session
   SESSION_SECRET: 'bla_bla_secret_session_dont_tell_anyone',
 
+  // Session Redis Store Configurations
+  SESSION_REDIS_HOST: process.env.SESSION_REDIS_HOST,
+  SESSION_REDIS_PORT: 
+    process.env.SESSION_REDIS_PORT && !isNaN(parseInt(process.env.SESSION_REDIS_PORT)) ?
+    parseInt(process.env.SESSION_REDIS_PORT)
+    :
+    undefined,
+  SESSION_REDIS_PASSWORD: process.env.SESSION_REDIS_PASSWORD,
+
   // MongoDB Url
   mongoUrl:
     `mongodb${process.env.MONGO_SRV || ''}://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.MONGO_URL}`,
